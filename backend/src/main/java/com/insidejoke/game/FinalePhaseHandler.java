@@ -9,8 +9,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.ToLongFunction;
+import java.util.random.RandomGenerator;
 
 /** The finale: standings, titles and the closing speech of the host. Runs under the room lock taken by {@link GameEngineService}. */
 final class FinalePhaseHandler {
@@ -18,11 +18,14 @@ final class FinalePhaseHandler {
     private final GameRuntimeService runtime;
     private final HostAiService ai;
     private final FallbackContentService fallback;
+    private final RandomGenerator random;
 
-    FinalePhaseHandler(GameRuntimeService runtime, HostAiService ai, FallbackContentService fallback) {
+    FinalePhaseHandler(
+            GameRuntimeService runtime, HostAiService ai, FallbackContentService fallback, RandomGenerator random) {
         this.runtime = runtime;
         this.ai = ai;
         this.fallback = fallback;
+        this.random = random;
     }
 
     // ------------------------------------------------------------------ finale
@@ -49,11 +52,15 @@ final class FinalePhaseHandler {
         Language language = r.getSettings().language();
         int game = r.getGameNumber();
         runtime.async(r, () -> ai.finale(ctx, tone, language, stats).orElse(null), (room, outcome) -> {
-            if (room.getGameNumber() != game) {
+            if (room.getGameNumber() != game || room.getFinale() != null) {
+                // Another game by now, or the fallback finale is already on screen: the titles people saw stay.
                 return;
             }
             Finale generated = outcome.value();
-            if (generated != null) {
+            if (generated == null) {
+                // The model failed: nothing to wait for, the fallback is ready when the finale comes.
+                room.setFinale(fallbackFinale(room));
+            } else {
                 Map<String, String> titles = new HashMap<>(fallbackFinale(room).titles());
                 generated.titles().forEach((id, title) -> {
                     if (room.getPlayers().containsKey(id) && title != null && !title.isBlank()) {
@@ -113,7 +120,7 @@ final class FinalePhaseHandler {
         assignTitle(r.getSettings().language(), titles, players, p -> p.getVotesReceived(), "votes");
         List<String> generic =
                 new ArrayList<>(fallback.genericTitles(r.getSettings().language()));
-        Collections.shuffle(generic, ThreadLocalRandom.current());
+        Collections.shuffle(generic, random);
         int g = 0;
         for (PlayerState p : players) {
             if (!titles.containsKey(p.getId())) {

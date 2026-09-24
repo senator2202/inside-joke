@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.random.RandomGenerator;
 
 /**
  * Choosing the next round kind and getting its content from the AI or the prewritten fallback. Runs under the
@@ -21,18 +21,21 @@ final class RoundPhaseHandler {
     private final HostAiService ai;
     private final FallbackContentService fallback;
     private final AnalyticsService analytics;
+    private final RandomGenerator random;
 
     RoundPhaseHandler(
             GameRuntimeService runtime,
             GameProperties props,
             HostAiService ai,
             FallbackContentService fallback,
-            AnalyticsService analytics) {
+            AnalyticsService analytics,
+            RandomGenerator random) {
         this.runtime = runtime;
         this.props = props;
         this.ai = ai;
         this.fallback = fallback;
         this.analytics = analytics;
+        this.random = random;
     }
 
     void startRound(RoomState r, int n) {
@@ -72,7 +75,7 @@ final class RoundPhaseHandler {
         List<RoundKind> leastPlayed = candidates.stream()
                 .filter(k -> r.getKindCounts().getOrDefault(k, 0) == fewest)
                 .toList();
-        RoundKind chosen = leastPlayed.get(ThreadLocalRandom.current().nextInt(leastPlayed.size()));
+        RoundKind chosen = leastPlayed.get(random.nextInt(leastPlayed.size()));
         if (best == 0) {
             runtime.say(r, fallback.label(r.getSettings().language(), "hostPicks", Map.of()), Set.of());
         }
@@ -108,7 +111,7 @@ final class RoundPhaseHandler {
                                     r.getSettings().tone(),
                                     runtime.presentPlayers(r),
                                     r.getRecentPrompts(),
-                                    ThreadLocalRandom.current()));
+                                    random));
                 }
                 materialize(r, r.getPendingKind());
             }
@@ -140,7 +143,7 @@ final class RoundPhaseHandler {
                         room.getSettings().tone(),
                         runtime.presentPlayers(room),
                         room.getRecentPrompts(),
-                        ThreadLocalRandom.current());
+                        random);
             }
             room.putIfAbsentContent(key, generated);
             if (room.getPending() == RoomState.Pending.ROUND_CONTENT
@@ -177,7 +180,7 @@ final class RoundPhaseHandler {
     void materialize(RoomState r, RoundKind kind) {
         RoundContent content = r.getContent().get(GameRuleUtils.contentKey(r, r.getRoundNumber()));
         List<PlayerState> present = new ArrayList<>(runtime.presentPlayers(r));
-        Collections.shuffle(present, ThreadLocalRandom.current());
+        Collections.shuffle(present, random);
         RoundState round = new RoundState(r.getRoundNumber(), kind);
         r.setRound(round);
         switch (kind) {
@@ -186,11 +189,7 @@ final class RoundPhaseHandler {
                 prompts.removeIf(p -> r.getRecentPrompts().contains(p.text()));
                 if (prompts.size() < present.size()) {
                     RoundContent extra = fallback.round(
-                            r.getSettings().language(),
-                            r.getSettings().tone(),
-                            present,
-                            r.getRecentPrompts(),
-                            ThreadLocalRandom.current());
+                            r.getSettings().language(), r.getSettings().tone(), present, r.getRecentPrompts(), random);
                     prompts.addAll(extra.duelPrompts());
                 }
                 int n = present.size();
@@ -238,10 +237,9 @@ final class RoundPhaseHandler {
                                         r.getSettings().tone(),
                                         present,
                                         r.getRecentPrompts(),
-                                        ThreadLocalRandom.current())
+                                        random)
                                 .truth();
-                boolean useTruth = truth.truthStatement() != null
-                        && ThreadLocalRandom.current().nextBoolean();
+                boolean useTruth = truth.truthStatement() != null && random.nextBoolean();
                 round.setSubjectId(truth.aboutPlayerId());
                 round.setStatementTrue(useTruth);
                 round.setStatement(useTruth ? truth.truthStatement() : truth.fakeStatement());

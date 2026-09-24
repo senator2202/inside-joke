@@ -11,9 +11,13 @@ import com.insidejoke.support.Party;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.JsonNode;
 
 class GameFlowIT extends AbstractIntegrationTest {
+
+    @Autowired
+    RoomRegistryService registry;
 
     private static final String SECRET = "SECRET-XYZZY hides pineapple pizza in the freezer";
 
@@ -233,6 +237,42 @@ class GameFlowIT extends AbstractIntegrationTest {
                     .query(String.class)
                     .single();
             assertThat(previous).isNotNull();
+        }
+    }
+    /** The room's AI budget, counted in the engine, reaches the gateway: rounds fall back and the ledger says so. */
+    @Test
+    void aRoomOverItsAiBudgetFallsBackWithoutStopping() {
+        FakeAi.install(FAKE);
+        try (Party party = Party.create(port, json, FAKE, 3)) {
+            party.captain().socket().ok("game.start", Map.of());
+            party.screen.phase("INTAKE");
+            RoomState room = registry.find(party.code).orElseThrow();
+            room.call(r -> {
+                r.getLlmCalls().set(40);
+                r.getTtsCalls().set(60);
+                return null;
+            });
+            party.screen.ok("game.next", Map.of());
+            party.screen.phase("ANSWERING");
+            String sessionId = jdbc.sql("SELECT id::text FROM game_session WHERE room_code = ?")
+                    .param(party.code)
+                    .query(String.class)
+                    .single();
+            Await.until(
+                    "fallback recorded",
+                    () -> jdbc.sql("SELECT count(*) FROM ai_call WHERE game_session_id = ?::uuid "
+                                            + "AND purpose = 'ROUND_GEN' AND outcome = 'FALLBACK'")
+                                    .param(sessionId)
+                                    .query(Integer.class)
+                                    .single()
+                            > 0);
+            JsonNode phone = party.phones
+                    .get(0)
+                    .socket()
+                    .state(s -> s.path("you").path("assignments").size() == 2);
+            phone.path("you")
+                    .path("assignments")
+                    .forEach(a -> assertThat(a.path("prompt").asString()).doesNotStartWith("AI prompt"));
         }
     }
 }

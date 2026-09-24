@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.random.RandomGenerator;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -25,6 +25,7 @@ final class LobbyPhaseHandler {
     private final GameAccessPort access;
     private final AnalyticsService analytics;
     private final RoomEventListener events;
+    private final RandomGenerator random;
 
     LobbyPhaseHandler(
             GameRuntimeService runtime,
@@ -33,7 +34,8 @@ final class LobbyPhaseHandler {
             FallbackContentService fallback,
             GameAccessPort access,
             AnalyticsService analytics,
-            RoomEventListener events) {
+            RoomEventListener events,
+            RandomGenerator random) {
         this.runtime = runtime;
         this.props = props;
         this.clock = clock;
@@ -41,6 +43,7 @@ final class LobbyPhaseHandler {
         this.access = access;
         this.analytics = analytics;
         this.events = events;
+        this.random = random;
     }
 
     void changeSettings(RoomState r, JsonNode data) {
@@ -77,7 +80,7 @@ final class LobbyPhaseHandler {
                 hideCode && r.getSettings().mode() == RoomMode.STREAMER,
                 language));
         if (contentChanged && r.getGameNumber() == 0) {
-            r.setIntakeQuestions(fallback.intakeQuestions(language, tone, ThreadLocalRandom.current()));
+            r.setIntakeQuestions(fallback.intakeQuestions(language, tone, random));
         }
     }
     // ------------------------------------------------------------------ lifecycle: start, play again, finale, close
