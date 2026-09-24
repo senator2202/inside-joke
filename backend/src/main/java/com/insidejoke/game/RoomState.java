@@ -61,6 +61,9 @@ public final class RoomState {
     private final Map<String, PlayerState> players = new LinkedHashMap<>();
     private String captainId;
     private final Map<String, Member> members = new HashMap<>();
+    /** Recent requests per member token, to answer re-sent copies; has its own lock, usable without the room's. */
+    private final RequestHistoryState requests = new RequestHistoryState();
+
     private final List<DossierFact> dossier = new ArrayList<>();
     private List<String> intakeQuestions = List.of();
 
@@ -310,6 +313,10 @@ public final class RoomState {
 
     public Map<String, Member> getMembers() {
         return Collections.unmodifiableMap(members);
+    }
+
+    RequestHistoryState getRequests() {
+        return requests;
     }
 
     public void putMember(String key, Member value) {

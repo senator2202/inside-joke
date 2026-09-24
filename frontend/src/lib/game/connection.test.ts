@@ -91,6 +91,25 @@ describe("GameConnection", () => {
     expect(socket.requests("answer.submit")[0]?.data).toEqual({ duelId: "d1", text: "hello" });
   });
 
+  it("re-sends an in-flight request with its original reqId, and a new connection never reuses ids", () => {
+    const { net, conn } = connect();
+    net.last().open();
+    net.last().accept();
+    void conn.request("dossier.add", { text: "a secret" });
+    const sent = net.last().requests("dossier.add")[0]!;
+    net.last().drop();
+    vi.advanceTimersByTime(600);
+    net.last().open();
+    net.last().accept();
+    expect(net.last().requests("dossier.add")[0]?.reqId).toBe(sent.reqId);
+
+    const other = connect();
+    other.net.last().open();
+    other.net.last().accept();
+    void other.conn.request("dossier.add", { text: "a secret" });
+    expect(other.net.last().requests("dossier.add")[0]?.reqId).not.toBe(sent.reqId);
+  });
+
   it("treats a 'too slow' disconnect like any drop: reconnect and take a fresh snapshot", () => {
     const { net, statuses, states } = connect();
     net.last().open();

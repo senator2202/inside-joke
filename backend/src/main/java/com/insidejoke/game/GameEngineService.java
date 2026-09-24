@@ -340,10 +340,30 @@ public class GameEngineService implements GameRuntimeService {
 
     // ------------------------------------------------------------------ commands (WebSocket side)
 
-    /** Handles one client message. Errors go to {@code reply}; success may be replied later (after moderation). */
-    public void command(RoomState room, Member m, String type, JsonNode data, ReplyHandler reply) {
+    /**
+     * Handles one client message. Errors go to {@code reply}; success may be replied later (after moderation). A copy of
+     * a request this member already sent with the same {@code reqId} (re-sent after a reconnect) is not run again: it
+     * gets the first answer, now or when it comes.
+     */
+    public void command(RoomState room, Member m, String reqId, String type, JsonNode data, ReplyHandler reply) {
+        JsonNode body = data == null ? NullNode.getInstance() : data;
+        if (reqId == null) {
+            run(room, m, type, body, reply);
+            return;
+        }
+        room.getRequests().begin(m.token(), reqId, type, body, reply).ifPresent(tracked -> {
+            try {
+                run(room, m, type, body, tracked);
+            } catch (RuntimeException e) {
+                tracked.abandon();
+                throw e;
+            }
+        });
+    }
+
+    private void run(RoomState room, Member m, String type, JsonNode data, ReplyHandler reply) {
         try {
-            mutate(room, r -> dispatch(r, m, type, data == null ? NullNode.getInstance() : data, reply));
+            mutate(room, r -> dispatch(r, m, type, data, reply));
         } catch (ApiException e) {
             reply.error(e);
         }

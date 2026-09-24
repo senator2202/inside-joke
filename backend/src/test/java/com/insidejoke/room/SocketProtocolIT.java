@@ -112,6 +112,46 @@ class SocketProtocolIT extends AbstractIntegrationTest {
         }
     }
 
+    /** A client re-sends what was in flight when its connection dropped: answered again, applied once. */
+    @Test
+    void aRequestReSentAfterAReconnectIsAnsweredButAppliedOnce() {
+        FakeAi.install(FAKE, FakeAi.Mode.OK, 1500);
+        try (Party party = Party.create(port, json, FAKE, 3)) {
+            Party.Phone p = party.phones.get(0);
+            Map<String, Object> secret = Map.of("text", "Sleeps with a night light on");
+            p.socket().send("dossier.add", secret, "resent-1");
+            Await.until("the secret is being checked", () -> checksOf("night light") == 1);
+            p.socket().abort();
+
+            try (GameSocket again = GameSocket.connect(port, json, p.token())) {
+                JsonNode reply = again.reply(again.send("dossier.add", secret, "resent-1"));
+                assertThat(reply.path("type").asString())
+                        .as("answered once the check is done")
+                        .isEqualTo("ok");
+                assertThat(reply.path("data").path("secretsLeft").asInt()).isEqualTo(9);
+                again.abort();
+            }
+            try (GameSocket third = GameSocket.connect(port, json, p.token())) {
+                JsonNode reply = third.reply(third.send("dossier.add", secret, "resent-1"));
+                assertThat(reply.path("type").asString())
+                        .as("the answer is replayed")
+                        .isEqualTo("ok");
+                assertThat(reply.path("data").path("secretsLeft").asInt()).isEqualTo(9);
+                third.abort();
+            }
+
+            assertThat(party.screen.state(s -> s.path("secrets").asInt() == 1)).isNotNull();
+            assertThat(checksOf("night light")).as("checked by the model once").isEqualTo(1);
+            assertThat(party.screen.latest().path("secrets").asInt()).isEqualTo(1);
+        }
+    }
+
+    private static long checksOf(String text) {
+        return FAKE.requests("POST", "/anthropic/v1/messages").stream()
+                .filter(r -> r.body().contains(text))
+                .count();
+    }
+
     /** The protocol omits empty fields instead of sending null: clients (and older clients) rely on that shape. */
     @Test
     void stateFramesNeverCarryNulls() {

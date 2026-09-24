@@ -30,16 +30,25 @@ public final class FakeAi {
     private FakeAi() {}
 
     public static void install(FakeHttp fake, Mode mode) {
-        fake.on("POST", "/anthropic/v1/messages", req -> switch (mode) {
-            case ERROR -> FakeHttp.Reply.json(529, "{\"type\":\"error\",\"error\":{\"type\":\"overloaded_error\"}}");
-            case INVALID -> message("Sorry, I can't produce JSON today.");
-            case OK -> message(answer(req.body()));
-        });
+        install(fake, mode, 0);
+    }
+
+    /** Like {@link #install(FakeHttp, Mode)}, with every model reply held back by {@code delayMs}. */
+    public static void install(FakeHttp fake, Mode mode, long delayMs) {
+        fake.on("POST", "/anthropic/v1/messages", req -> reply(mode, req).delayed(delayMs));
         fake.on("POST", "/tts/v1/audio/speech", req -> FakeHttp.Reply.bytes(200, "audio/mpeg", MP3));
     }
 
     public static void install(FakeHttp fake) {
         install(fake, Mode.OK);
+    }
+
+    private static FakeHttp.Reply reply(Mode mode, FakeHttp.Recorded req) {
+        return switch (mode) {
+            case ERROR -> FakeHttp.Reply.json(529, "{\"type\":\"error\",\"error\":{\"type\":\"overloaded_error\"}}");
+            case INVALID -> message("Sorry, I can't produce JSON today.");
+            case OK -> message(answer(req.body()));
+        };
     }
 
     private static FakeHttp.Reply message(String text) {
