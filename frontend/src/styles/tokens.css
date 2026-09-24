@@ -1,0 +1,52 @@
+/*
+ * Inside Joke design tokens.
+ * Two moods: the host's prep site sits on lilac "paper"; party surfaces (TV, phones) sit on aubergine night.
+ * The one loud element is the highlighter: secrets and the thing you must press are marked in yellow.
+ */
+:root {
+  --night: #231942;
+  --night-deep: #170f2e;
+  --night-raised: #2f2356;
+  --paper: #efe9f7;
+  --paper-raised: #fbf9fe;
+  --ink: #1d1433;
+  --marker: #f5e663;
+  --marker-deep: #e2cf2e;
+  --blush: #ff7aa2;
+  --dusk: #6b5c8a;
+  --dusk-light: #b7aad3;
+  --alarm: #b8215a;
+  --alarm-on-night: #ff9dbb;
+
+  --font-display: "Bricolage Grotesque Variable", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+
+  /* Type scale: perfect fourth (1.333) on a 17px body. */
+  --step--1: 0.8rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.417rem;
+  --step-2: 1.889rem;
+  --step-3: 2.518rem;
+  --step-4: 3.357rem;
+  --step-5: 4.475rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+
+  /* Radii encode hierarchy: controls are pills, containers are gently rounded, overlays are square-ish. */
+  --radius-pill: 999px;
+  --radius-box: 14px;
+  --radius-sheet: 6px;
+
+  --shadow-sticker: 4px 4px 0 var(--ink);
+  --shadow-sticker-night: 4px 4px 0 var(--blush);
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --focus-ring: 0 0 0 3px var(--paper-raised), 0 0 0 6px var(--ink);
+}

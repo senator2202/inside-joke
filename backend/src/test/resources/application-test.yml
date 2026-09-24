@@ -1,0 +1,26 @@
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+app:
+  public-url: http://localhost
+  admin-emails: boss@example.com
+  mail:
+    provider: resend
+    resend:
+      api-key: test-resend-key
+  paddle:
+    environment: sandbox
+    client-token: test_client_token
+    webhook-secret: pdl_ntfset_test_secret
+    prices:
+      party-pass: pri_party
+      host-pass: pri_host
+  google:
+    client-id: test-google-client
+    client-secret: test-google-secret
+logging:
+  level:
+    root: WARN
+    com.insidejoke: INFO

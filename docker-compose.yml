@@ -1,0 +1,21 @@
+# Local PostgreSQL for development: docker compose up -d
+# Matches the defaults in .env.example. Tests don't need it (they start an embedded PostgreSQL).
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: insidejoke
+      POSTGRES_USER: insidejoke
+      POSTGRES_PASSWORD: insidejoke
+    ports:
+      - "5432:5432"
+    volumes:
+      - insidejoke-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insidejoke -d insidejoke"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  insidejoke-db:

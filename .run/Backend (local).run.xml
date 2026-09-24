@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Backend (local)" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.insidejoke.InsideJokeApplication" />
+    <module name="backend" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <envs>
+      <env name="SPRING_PROFILES_ACTIVE" value="local" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

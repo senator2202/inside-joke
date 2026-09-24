@@ -1,0 +1,17 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.working {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.lede {
+  color: var(--dusk);
+  font-size: var(--step-1);
+  line-height: 1.35;
+}

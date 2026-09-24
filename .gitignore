@@ -1,0 +1,18 @@
+# Build output
+target/
+frontend/dist/
+frontend/node_modules/
+frontend/coverage/
+*.log
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# IDEs
+.idea/
+!.run/
+*.iml
+.vscode/
+.DS_Store

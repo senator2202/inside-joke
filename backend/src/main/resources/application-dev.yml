@@ -1,0 +1,11 @@
+# Local development: docker compose postgres, Vite dev server on :5173, emails written to the log.
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+app:
+  public-url: ${APP_PUBLIC_URL:http://localhost:5173}
+  allowed-origins: http://localhost:5173
+  mail:
+    provider: ${MAIL_PROVIDER:log}

@@ -1,0 +1,173 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--night-deep) 82%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: min(100%, 46rem);
+  padding: var(--space-6);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-sheet);
+  background: var(--paper);
+  box-shadow: 6px 6px 0 var(--marker);
+  color: var(--ink);
+  font-size: var(--step-0);
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--dusk);
+  font-size: var(--step-1);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-box);
+  background: var(--paper-raised);
+  text-align: left;
+}
+
+.card[data-recommended] {
+  border-width: 3px;
+  box-shadow: var(--shadow-sticker);
+}
+
+.card h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+}
+
+.badge {
+  position: absolute;
+  top: -0.8rem;
+  left: var(--space-4);
+  padding: 0 var(--space-2);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--blush);
+  font-size: var(--step--1);
+  font-weight: 700;
+}
+
+.price {
+  margin: 0;
+  min-height: 1.3em;
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.per {
+  color: var(--dusk);
+  font-size: var(--step-0);
+  font-weight: 400;
+}
+
+.skeleton {
+  display: inline-block;
+  width: 5ch;
+  height: 0.9em;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--paper), var(--dusk-light), var(--paper));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.blurb {
+  flex: 1;
+  margin: 0 0 var(--space-2);
+  color: var(--dusk);
+}
+
+.adult {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+}
+
+.adult input {
+  width: 1.3rem;
+  height: 1.3rem;
+  accent-color: var(--ink);
+}
+
+.small {
+  margin: 0;
+  color: var(--dusk);
+  font-size: var(--step--1);
+}
+
+.error {
+  margin: 0;
+  color: var(--alarm);
+  font-weight: 700;
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+}
+
+.done {
+  margin: 0;
+  font-size: 3.5rem;
+  line-height: 1;
+  animation: pop 500ms var(--ease-out);
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+
+.link {
+  color: var(--ink);
+  font-weight: 700;
+}

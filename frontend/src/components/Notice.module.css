@@ -1,0 +1,48 @@
+.notice {
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-box);
+  border: 2px solid var(--ink);
+  background: var(--paper-raised);
+}
+
+.title {
+  font-weight: 700;
+}
+
+.body {
+  margin-top: var(--space-1);
+}
+
+.title + .body {
+  margin-top: var(--space-1);
+}
+
+.error {
+  border-color: var(--alarm);
+  color: var(--alarm);
+}
+
+.success {
+  background: var(--marker);
+}
+
+.info {
+  border-style: dashed;
+}
+
+:global(.night) .notice {
+  background: var(--night-raised);
+  border-color: var(--dusk-light);
+  color: var(--paper);
+}
+
+:global(.night) .error {
+  border-color: var(--alarm-on-night);
+  color: var(--alarm-on-night);
+}
+
+:global(.night) .success {
+  background: var(--marker);
+  border-color: var(--marker);
+  color: var(--ink);
+}

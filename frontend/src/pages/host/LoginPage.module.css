@@ -1,0 +1,70 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.lede {
+  color: var(--dusk);
+  font-size: var(--step-1);
+  line-height: 1.35;
+}
+
+.email {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--dusk);
+  font-size: var(--step--1);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  border-top: 2px dotted var(--dusk-light);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.legal {
+  color: var(--dusk);
+  font-size: var(--step--1);
+}
+
+.codeRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.checking {
+  font-weight: 700;
+  color: var(--dusk);
+}
+
+.hint {
+  color: var(--dusk);
+}
+
+.codeError {
+  color: var(--alarm);
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}

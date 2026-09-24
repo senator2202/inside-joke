@@ -1,0 +1,123 @@
+spring:
+  application:
+    name: inside-joke
+  # KEY=VALUE pairs from a .env file in the working directory (the project root when started from IntelliJ). Optional;
+  # real environment variables take precedence. Maven tests run from backend/ and therefore never read it.
+  config:
+    import: "optional:file:.env[.properties]"
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/insidejoke}
+    username: ${DATABASE_USER:insidejoke}
+    password: ${DATABASE_PASSWORD:insidejoke}
+    hikari:
+      maximum-pool-size: 10
+  flyway:
+    enabled: true
+  session:
+    timeout: 30d
+    jdbc:
+      initialize-schema: never
+      cleanup-cron: "0 */10 * * * *"
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-cache: true
+  mvc:
+    problemdetails:
+      enabled: false
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: native
+  shutdown: graceful
+  servlet:
+    session:
+      timeout: 30d
+      cookie:
+        name: IJ_SESSION
+        http-only: true
+        secure: ${APP_COOKIE_SECURE:${COOKIE_SECURE:true}}
+        same-site: lax
+        max-age: 30d
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: INFO
+
+app:
+  public-url: ${APP_PUBLIC_URL:http://localhost:8080}
+  allowed-origins: ${APP_ALLOWED_ORIGINS:}
+  admin-emails: ${APP_ADMIN_EMAILS:}
+  content-security-policy: >-
+    default-src 'self';
+    script-src 'self' https://cdn.paddle.com https://sandbox-cdn.paddle.com;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data: blob:;
+    media-src 'self' blob:;
+    font-src 'self' data:;
+    connect-src 'self' wss: ws: https://*.paddle.com;
+    frame-src https://*.paddle.com;
+    frame-ancestors 'none';
+    base-uri 'self';
+    form-action 'self'
+  mail:
+    provider: ${MAIL_PROVIDER:resend}
+    from: ${MAIL_FROM:Inside Joke <login@insidejoke.app>}
+    resend:
+      base-url: ${RESEND_BASE_URL:https://api.resend.com}
+      api-key: ${RESEND_API_KEY:}
+    smtp:
+      host: ${SMTP_HOST:}
+      port: ${SMTP_PORT:}
+      username: ${SMTP_USERNAME:}
+      password: ${SMTP_PASSWORD:}
+      security: ${SMTP_SECURITY:starttls}
+      timeout: ${SMTP_TIMEOUT:10s}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+  game:
+    intake: 90s
+    round-vote: 15s
+    answering: 60s
+    voting: 20s
+    reveal: 12s
+  ai:
+    require-llm-moderation: ${AI_REQUIRE_LLM_MODERATION:true}
+    anthropic:
+      base-url: ${ANTHROPIC_BASE_URL:https://api.anthropic.com}
+      api-key: ${ANTHROPIC_API_KEY:}
+      model: ${ANTHROPIC_MODEL:claude-haiku-4-5}
+      input-micros-per-token: ${ANTHROPIC_INPUT_MICROS_PER_TOKEN:1}
+      output-micros-per-token: ${ANTHROPIC_OUTPUT_MICROS_PER_TOKEN:5}
+    tts:
+      base-url: ${TTS_BASE_URL:https://api.openai.com}
+      api-key: ${TTS_API_KEY:}
+      model: ${TTS_MODEL:tts-1}
+      voice: ${TTS_VOICE:onyx}
+      micros-per-char: ${TTS_MICROS_PER_CHAR:15}
+  paddle:
+    environment: ${PADDLE_ENVIRONMENT:sandbox}
+    client-token: ${PADDLE_CLIENT_TOKEN:}
+    webhook-secret: ${PADDLE_WEBHOOK_SECRET:}
+    prices:
+      party-pass: ${PADDLE_PRICE_PARTY_PASS:}
+      host-pass: ${PADDLE_PRICE_HOST_PASS:}
+    support-email: ${APP_SUPPORT_EMAIL:${SUPPORT_EMAIL:support@insidejoke.app}}
+  posthog:
+    api-key: ${POSTHOG_API_KEY:}
+    host: ${POSTHOG_HOST:https://eu.i.posthog.com}

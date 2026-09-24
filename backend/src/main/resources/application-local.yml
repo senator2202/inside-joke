@@ -1,0 +1,23 @@
+# Local development profile (SPRING_PROFILES_ACTIVE=local): development-friendly defaults. Sign-in codes are printed to
+# the log instead of emailed, cookies work over plain http, and the Vite dev server on :5173 may open WebSockets.
+# Values from .env (see application.yml) or real environment variables still win.
+server:
+  servlet:
+    session:
+      cookie:
+        secure: ${APP_COOKIE_SECURE:${COOKIE_SECURE:false}}
+
+app:
+  public-url: ${APP_PUBLIC_URL:http://localhost:5173}
+  allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8080}
+  admin-emails: ${APP_ADMIN_EMAILS:admin@example.com}
+  mail:
+    provider: ${MAIL_PROVIDER:log}
+  ai:
+    # Without an Anthropic key, accept secrets on the rules alone so the whole flow can be tried locally.
+    # Production keeps the default (true): secrets are turned off when nothing can check them.
+    require-llm-moderation: ${AI_REQUIRE_LLM_MODERATION:false}
+
+logging:
+  level:
+    com.insidejoke: DEBUG

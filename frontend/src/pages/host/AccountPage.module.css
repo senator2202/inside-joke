@@ -1,0 +1,159 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: min(100%, 40rem);
+  margin: 0 auto;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--step-4);
+  line-height: 1;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-box);
+  background: var(--paper-raised);
+}
+
+.card h2 {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+}
+
+.card p {
+  margin: 0;
+}
+
+.big {
+  overflow-wrap: anywhere;
+  font-size: var(--step-1);
+  font-weight: 700;
+}
+
+.passes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.passes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  padding-left: var(--space-3);
+  border-left: 6px solid var(--marker-deep);
+}
+
+.gift {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--blush);
+  font-size: var(--step--1);
+  font-weight: 700;
+}
+
+.free {
+  margin-top: var(--space-2) !important;
+  font-weight: 700;
+}
+
+.small {
+  color: var(--dusk);
+  font-size: var(--step--1);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.line,
+.skeleton {
+  display: block;
+  height: 1.1em;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--paper), var(--dusk-light), var(--paper));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+.line:nth-of-type(2) {
+  width: 60%;
+}
+
+.skeleton {
+  height: 12rem;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.danger {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 2px dashed var(--dusk-light);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: min(100%, 28rem);
+  padding: var(--space-6);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-sheet);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-sticker);
+}
+
+.dialog h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+}
+
+.dialog p {
+  margin: 0;
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}

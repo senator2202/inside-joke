@@ -1,0 +1,188 @@
+<!doctype html>
+<!--
+  DRAFT prepared by the development team, not legal advice. It must be reviewed by a qualified lawyer before
+  publication. Highlighted [bracketed] fields must be filled in. Points to check in particular: the legal basis for
+  analytics and whether the anonymous analytics id in local storage needs consent in the EU/UK (ePrivacy); the
+  international transfer mechanism; the age thresholds for your target countries.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy · Inside Joke</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/legal.css" />
+  </head>
+  <body>
+    <main>
+      <p><a href="/">Inside Joke</a></p>
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: September 22, 2026</p>
+
+      <h2>The short version</h2>
+      <p>
+        We keep hosts' accounts, purchases and game statistics. We don't keep what players say in a game: answers, secrets and the jokes
+        made from them live in memory while the room is open and are deleted when it closes. Guests don't create accounts. We don't sell
+        personal data and don't show ads.
+      </p>
+
+      <h2>Who we are</h2>
+      <p>
+        Inside Joke is operated by <span class="fill">[Legal entity name]</span>, <span class="fill">[registered address]</span>
+        ("we", "us"). We are the controller of the personal data described here. Contact:
+        <a href="mailto:hello@insidejoke.app">hello@insidejoke.app</a>.
+      </p>
+
+      <h2>Hosts</h2>
+      <p>
+        When you sign in we store your email address, the name Google shares with us (if you use Google), your Google account identifier,
+        when you signed in, your passes and their use, and a summary of each game you host (see "What we keep after a game"). We use this to
+        sign you in, apply your pass, count free and monthly games, and support you.
+      </p>
+      <p>
+        To sign in with an email code we store a hashed copy of the code, the email it was sent to and the IP address that asked for it, to
+        stop abuse. These records are deleted after 24 hours.
+      </p>
+
+      <h2>Guests</h2>
+      <p>
+        Guests only choose a display name and an emoji. While the room is open we hold the name, emoji, score and a random reconnect token
+        in memory. Your browser keeps the token for up to 6 hours so you can rejoin after a dropped connection, remembers the last name and
+        emoji you used, and keeps an unsent answer until you close the tab. Viewers in streamer mode get a random token and nothing else.
+      </p>
+
+      <h2>Game content</h2>
+      <p>
+        Answers, secrets and the host's lines exist only in the server's memory while the room is open. A room closes when the host ends it,
+        after 30 minutes without activity, or after 4 hours at most; its content is then deleted. Audio of the host's voice is cached in
+        memory for up to 10 minutes.
+      </p>
+      <p>
+        To run the game, the text players enter is sent to our AI providers: Anthropic, for writing rounds and jokes and for checking
+        content, and <span class="fill">[text-to-speech provider]</span>, which turns the host's lines into speech. They receive it only to
+        return a result, under API terms that do not allow them to train their models on it.
+      </p>
+      <p>
+        Some topics are filtered automatically (health, appearance, sexual orientation, contact details and similar). Anyone a line is about
+        can skip it, and the host can skip any line.
+      </p>
+
+      <h2>What we keep after a game</h2>
+      <ul>
+        <li>
+          A game summary: tone, length, mode, number of players and rounds, number of secrets shared, peak number of viewers, when it
+          started and ended, and why it ended.
+        </li>
+        <li>
+          AI usage records: which kind of request was made, its size in tokens or characters, cost, speed and whether it worked. Never the
+          text.
+        </li>
+        <li>Moderation records: at which step something was blocked or skipped, and the category. Never the text.</li>
+        <li>The host's rating of the game and an optional comment of up to 500 characters.</li>
+      </ul>
+
+      <h2>Payments</h2>
+      <p>
+        Payments are handled by Paddle.com, the merchant of record, which collects your payment details, billing information and tax data
+        under its own <a href="https://www.paddle.com/legal/privacy">privacy notice</a> and sends your receipt. We receive the transaction
+        identifier, the product, the amount and the currency, and we keep these purchase records for accounting and tax purposes, including
+        after you delete your account.
+      </p>
+
+      <h2>Product analytics</h2>
+      <p>
+        We use PostHog to understand how the game is used, for example how many rooms are created, how many players join and how many games
+        are finished. Events are linked to a random identifier: a host's account id, a room-scoped id for guests, or a random id stored in
+        your browser on the landing page. They never contain names, answers or secrets.
+      </p>
+
+      <h2>Other service providers</h2>
+      <p>
+        Resend delivers sign-in emails. Google provides Google sign-in. Our servers are hosted by
+        <span class="fill">[hosting provider, region]</span>. Each provider processes data only to provide its service to us.
+      </p>
+
+      <h2>Cookies and browser storage</h2>
+      <p>
+        We use a session cookie to keep hosts signed in (up to 30 days) and a security cookie that protects forms against cross-site
+        requests. Local storage holds the room seats, preferences, drafts and analytics id described above. We use no advertising or
+        cross-site tracking cookies.
+      </p>
+
+      <h2>Legal bases</h2>
+      <p>
+        We process account, game and purchase data to provide the service you asked for (performance of a contract); keep purchase records
+        to meet tax and accounting obligations (legal obligation); and use security records and product analytics to protect and improve the
+        service (legitimate interests).
+      </p>
+
+      <h2>How long we keep data</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Kept for</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Answers, secrets, host lines, guest names</td>
+              <td>Until the room closes (4 hours at most)</td>
+            </tr>
+            <tr>
+              <td>Host voice audio</td>
+              <td>Up to 10 minutes</td>
+            </tr>
+            <tr>
+              <td>Sign-in codes and the requesting IP address</td>
+              <td>24 hours</td>
+            </tr>
+            <tr>
+              <td>Signed-in session</td>
+              <td>Up to 30 days, or until you sign out</td>
+            </tr>
+            <tr>
+              <td>Account details</td>
+              <td>Until you delete your account</td>
+            </tr>
+            <tr>
+              <td>Game summaries, AI usage and moderation records, ratings</td>
+              <td>While the account exists; after deletion, linked only to the anonymized account</td>
+            </tr>
+            <tr>
+              <td>Purchase records</td>
+              <td><span class="fill">[period required by applicable tax law]</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>International transfers</h2>
+      <p>
+        Some providers, including Anthropic, Paddle, PostHog, Resend and Google, may process data outside your country, for example in the
+        United States. Where required, transfers rely on <span class="fill">[transfer mechanism, e.g. Standard Contractual Clauses]</span>.
+      </p>
+
+      <h2>Your rights</h2>
+      <p>
+        Depending on where you live, you can ask to access, correct, export or delete your personal data, object to or restrict its use, and
+        complain to your data protection authority. Hosts can delete their account at any time on the Account page: the email address and
+        sign-in details are removed immediately, passes end, and open rooms close. For any other request, write to
+        <a href="mailto:hello@insidejoke.app">hello@insidejoke.app</a>.
+      </p>
+
+      <h2>Children</h2>
+      <p>
+        Inside Joke is not intended for children under 13, and hosting, buying passes and the Spicy tone are for adults only. If you believe
+        a child has given us personal data, contact us and we will delete it.
+      </p>
+
+      <h2>Changes</h2>
+      <p>If we change this policy we will update the date above and, for significant changes, tell hosts by email or in the app.</p>
+
+      <h2>Contact</h2>
+      <p><a href="mailto:hello@insidejoke.app">hello@insidejoke.app</a></p>
+    </main>
+  </body>
+</html>

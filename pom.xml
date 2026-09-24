@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.insidejoke</groupId>
+    <artifactId>inside-joke</artifactId>
+    <version>0.8.2</version>
+    <packaging>pom</packaging>
+    <name>Inside Joke</name>
+    <description>AI party game for 3-8 players in the browser</description>
+
+    <modules>
+        <module>frontend</module>
+        <module>backend</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <bucket4j.version>8.20.0</bucket4j.version>
+        <embedded-postgres.version>2.2.2</embedded-postgres.version>
+        <embedded-postgres-binaries.version>18.6.0</embedded-postgres-binaries.version>
+        <checkstyle.version>14.1.0</checkstyle.version>
+        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
+        <exec-maven-plugin.version>3.6.4</exec-maven-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.insidejoke</groupId>
+                <artifactId>frontend</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bucket4j</groupId>
+                <artifactId>bucket4j_jdk17-core</artifactId>
+                <version>${bucket4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.zonky.test</groupId>
+                <artifactId>embedded-postgres</artifactId>
+                <version>${embedded-postgres.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.zonky.test.postgres</groupId>
+                <artifactId>embedded-postgres-binaries-bom</artifactId>
+                <version>${embedded-postgres-binaries.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>${exec-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>${maven-checkstyle-plugin.version}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>${checkstyle.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

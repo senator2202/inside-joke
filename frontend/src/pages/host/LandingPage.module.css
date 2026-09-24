@@ -1,0 +1,205 @@
+.hero {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  padding: var(--space-6) 0 var(--space-8);
+}
+
+.pitch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.promise {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5.2vw, 4.4rem);
+  font-stretch: 88%;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.promise mark {
+  padding: 0 0.12em;
+  background: var(--marker);
+  color: inherit;
+  box-decoration-break: clone;
+}
+
+.lead {
+  max-width: 44ch;
+  margin: 0;
+  font-size: var(--step-1);
+  line-height: 1.4;
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.fine {
+  margin: 0;
+  color: var(--dusk);
+  font-size: var(--step--1);
+}
+
+.section {
+  padding: var(--space-7) 0;
+  border-top: 2px solid var(--ink);
+}
+
+.section h2 {
+  margin: 0 0 var(--space-5);
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  line-height: 1;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps h3 {
+  margin: var(--space-3) 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+}
+
+.steps p {
+  margin: 0;
+}
+
+.stepN {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--marker);
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-weight: 800;
+}
+
+.lines {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.line {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-5);
+  border-radius: var(--radius-box) var(--radius-box) var(--radius-box) var(--radius-sheet);
+  background: var(--night);
+  color: var(--paper);
+}
+
+.line blockquote {
+  margin: 0;
+  font-size: var(--step-1);
+  line-height: 1.35;
+}
+
+.line figcaption {
+  color: var(--marker);
+  font-weight: 700;
+}
+
+.prices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.price {
+  padding: var(--space-5);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-box);
+  background: var(--paper-raised);
+}
+
+.price[data-featured] {
+  box-shadow: var(--shadow-sticker);
+  background: var(--marker);
+}
+
+.price h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+}
+
+.price p {
+  margin: var(--space-2) 0 0;
+}
+
+.amount {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.amount span {
+  font-size: var(--step-0);
+  font-weight: 400;
+}
+
+.streamers p {
+  max-width: 60ch;
+  margin: 0;
+  font-size: var(--step-1);
+}
+
+.faq {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.faq details {
+  padding: var(--space-4) var(--space-5);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-box);
+  background: var(--paper-raised);
+}
+
+.faq summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.faq details p {
+  margin: var(--space-3) 0 0;
+}
+
+@media (max-width: 52rem) {
+  .hero,
+  .steps,
+  .lines,
+  .prices {
+    grid-template-columns: 1fr;
+  }
+
+  /* Phones are mostly guests: the code entry comes first there. */
+  .join {
+    order: -1;
+  }
+}

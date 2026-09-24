@@ -1,0 +1,316 @@
+{
+  "intake": {
+    "FAMILY": [
+      "What's a food you secretly can't stand?",
+      "What would your childhood self be most disappointed by today?",
+      "What's the most useless thing you're weirdly good at?",
+      "Which chore would you pay anything to never do again?",
+      "What's a harmless rule you always break?",
+      "What did you want to be when you grew up, and what went wrong?"
+    ],
+    "CHEEKY": [
+      "What's a harmless lie you tell regularly?",
+      "What's the most embarrassing song on your playlist?",
+      "What's the pettiest thing you've ever done?",
+      "What's your worst habit that you're secretly proud of?",
+      "What do you pretend to understand but absolutely don't?",
+      "What's the dumbest way you've ever hurt yourself?"
+    ],
+    "SPICY": [
+      "What's the worst date you've ever been on?",
+      "What's the most unhinged text you've ever sent?",
+      "What's a red flag you'd happily ignore?",
+      "What's the most rebellious thing you did as a teenager?",
+      "What would get you instantly cancelled if people found out?",
+      "What's the worst thing you've said to impress someone?"
+    ]
+  },
+  "duelPrompts": {
+    "FAMILY": [
+      "The worst name for a family pet",
+      "A terrible slogan for a dentist",
+      "What grandma actually keeps in her handbag",
+      "The least exciting superhero power",
+      "A rejected flavour of ice cream",
+      "The worst thing to hear from your GPS",
+      "What the dog is really thinking during dinner",
+      "A new rule for the school cafeteria",
+      "The worst thing to find in a lunchbox",
+      "An Olympic sport that should exist",
+      "A fortune cookie message that's way too honest",
+      "The most boring theme park ride",
+      "What the fridge light does when the door is closed",
+      "A children's book title that went too far",
+      "The worst gift to bring to a birthday party",
+      "What aliens would find most confusing about us",
+      "A terrible name for a boat",
+      "The first thing you'd do as a ghost",
+      "A weird thing to collect",
+      "The worst advice from a talking parrot",
+      "What your houseplant complains about",
+      "A board game nobody would buy",
+      "The most suspicious thing a neighbour could do",
+      "A holiday that should replace Monday",
+      "Something you should never say at a museum",
+      "The worst mascot for a sports team",
+      "A new use for spaghetti",
+      "The worst thing to shout in a library",
+      "A rejected nursery rhyme",
+      "What the moon does on its day off"
+    ],
+    "CHEEKY": [
+      "The worst thing to say on a first date",
+      "A terrible excuse for being late to work",
+      "What your search history says about you, in three words",
+      "The real reason the group chat went silent",
+      "A dating app bio that guarantees zero matches",
+      "The worst thing to accidentally reply-all",
+      "A self-help book nobody asked for",
+      "What you'd name your autobiography",
+      "The worst toast at a wedding",
+      "A LinkedIn skill that should be banned",
+      "The worst thing to hear from your hairdresser",
+      "A new rule for this group of friends",
+      "What the barista writes about you after you leave",
+      "The worst possible band name",
+      "A terrible business idea you'd still invest in",
+      "What your ex is telling people about you",
+      "The worst time to start clapping",
+      "The real reason you're still single, according to your mum",
+      "A reality show that would get cancelled after one episode",
+      "The worst thing to say during a job interview",
+      "Your villain origin story",
+      "What your phone would say if it could talk back",
+      "A text you should never send at 3 a.m.",
+      "The worst thing to find in a hotel room",
+      "A motivational quote that isn't helping",
+      "A rejected energy drink name",
+      "The worst thing to bring to a potluck",
+      "What the smart speaker has overheard in this house",
+      "A cursed wedding tradition",
+      "The worst thing to say to a police officer"
+    ],
+    "SPICY": [
+      "The worst pickup line that somehow worked",
+      "What really happened at the last party, in five words",
+      "A safe word that would kill the mood instantly",
+      "The worst thing to moan at the wrong moment",
+      "What your bedroom playlist says about you",
+      "A terrible name for a strip club",
+      "The worst thing to hear the morning after",
+      "A cocktail named after your love life",
+      "The least sexy fetish imaginable",
+      "What your mattress would testify in court",
+      "The worst walk-of-shame excuse",
+      "A dating app filter that should exist",
+      "The worst thing to find in your partner's browser history",
+      "A romance novel title that's too honest",
+      "The worst place to get caught making out",
+      "Your drunk alter ego's catchphrase",
+      "A hangover cure that makes things worse",
+      "What your ex's new partner should be warned about",
+      "The worst thing to scream at a bachelorette party",
+      "A tattoo you'd regret by Tuesday",
+      "The real reason the neighbours complained",
+      "A sex tip from a grandmother",
+      "The worst thing to name your phone's hotspot",
+      "What happens in Vegas, but worse",
+      "A condom brand slogan that won't sell",
+      "The worst thing to hear through the hotel wall",
+      "A red flag you'd date anyway",
+      "The most awkward thing to find in a friend's nightstand",
+      "What the Uber driver will tell his friends about you",
+      "A terrible thing to text your boss by accident"
+    ]
+  },
+  "whoOfUs": {
+    "FAMILY": [
+      "Who of us would survive longest on a desert island?",
+      "Who of us would win a staring contest with a cat?",
+      "Who of us gets lost in a supermarket?",
+      "Who of us would be the worst at keeping a surprise party secret?",
+      "Who of us would adopt ten cats?",
+      "Who of us still has their childhood teddy bear?",
+      "Who of us would be the first to befriend an alien?",
+      "Who of us takes the longest to choose from a menu?",
+      "Who of us would accidentally join a cult for the snacks?",
+      "Who of us would talk their way out of a parking ticket?",
+      "Who of us sings loudest in the car?",
+      "Who of us would win a baking competition by accident?",
+      "Who of us would be a terrible spy?",
+      "Who of us would cry at a dog food advert?",
+      "Who of us would get lost in IKEA for three hours?"
+    ],
+    "CHEEKY": [
+      "Who of us would be first to get kicked out of a museum?",
+      "Who of us would survive a zombie apocalypse by pure luck?",
+      "Who of us has the most chaotic camera roll?",
+      "Who of us would text their ex after one drink?",
+      "Who of us would start a cult by accident?",
+      "Who of us would win a reality show by being the villain?",
+      "Who of us would lie about their age on a dating app?",
+      "Who of us would get arrested for something really stupid?",
+      "Who of us reads the group chat and never replies?",
+      "Who of us would sell out their friends for a free pizza?",
+      "Who of us would become famous for the wrong reason?",
+      "Who of us has the worst taste in partners?",
+      "Who of us would be the worst roommate?",
+      "Who of us would fake an accent for a whole holiday?",
+      "Who of us would argue with a customer service robot for an hour?"
+    ],
+    "SPICY": [
+      "Who of us has the wildest body count story?",
+      "Who of us would hook up at a wedding?",
+      "Who of us has sent the most regrettable nude?",
+      "Who of us would date two people at once and lose track?",
+      "Who of us would flirt their way out of a speeding ticket?",
+      "Who of us would go home with the bartender?",
+      "Who of us has the most dangerous drunk alter ego?",
+      "Who of us would join a nudist beach without hesitation?",
+      "Who of us has kissed someone in this room?",
+      "Who of us would slide into a celebrity's DMs?",
+      "Who of us would get caught in a very compromising situation?",
+      "Who of us would survive the shortest time without their phone at a party?",
+      "Who of us would marry for money?",
+      "Who of us would lose a bet and end up with a tattoo?",
+      "Who of us has the most chaotic love life?"
+    ]
+  },
+  "fakeFacts": {
+    "FAMILY": [
+      "{name} once got stuck in a revolving door for twenty minutes.",
+      "{name} names every houseplant after a famous scientist.",
+      "{name} has never successfully whistled.",
+      "{name} once ate a whole birthday cake meant for someone else.",
+      "{name} is secretly afraid of ducks.",
+      "{name} still sleeps with a night light.",
+      "{name} once waved back at someone who was waving at the person behind them, and kept going for a full minute.",
+      "{name} can recite every word of a cereal advert from 2004.",
+      "{name} has a secret talent for opera singing.",
+      "{name} once got lost in their own neighbourhood."
+    ],
+    "CHEEKY": [
+      "{name} once pretended to be on the phone for an entire bus ride to avoid a conversation.",
+      "{name} has a fake name they give to baristas.",
+      "{name} once cried at a car insurance advert.",
+      "{name} practised an Oscar speech in the bathroom mirror last week.",
+      "{name} has a secret TikTok account with more followers than you'd think.",
+      "{name} once blamed a smell on the dog, and there was no dog.",
+      "{name} still owes a library book from 2011.",
+      "{name} once walked into a glass door at a job interview.",
+      "{name} has a playlist called 'songs to fight to'.",
+      "{name} once returned clothes after wearing them to a wedding."
+    ],
+    "SPICY": [
+      "{name} once kissed a stranger at midnight and never learned their name.",
+      "{name} has a dating app profile that's still active.",
+      "{name} once got locked out of a hotel room wearing only a towel.",
+      "{name} has a tattoo nobody in this room has seen.",
+      "{name} once accidentally sent a flirty text to their mum.",
+      "{name} has been thrown out of a club for dancing on the bar.",
+      "{name} once went on three dates in one day.",
+      "{name} has a drawer they would never let anyone open.",
+      "{name} once woke up in a different city after a night out.",
+      "{name} still has an ex's hoodie and wears it."
+    ]
+  },
+  "lines": {
+    "lobbyGreeting": [
+      "{name} is here. The party just got more interesting.",
+      "Welcome, {name}. I already know things about you. Kidding. For now.",
+      "{name} has entered the room. Everyone act normal.",
+      "Look who showed up. Hello, {name}.",
+      "{name} joins. Excellent. More material."
+    ],
+    "lobbyWaiting": [
+      "Scan the code on the screen. I don't bite. Much.",
+      "We need at least three players. I need an audience.",
+      "Grab your phones. Snacks optional, secrets mandatory."
+    ],
+    "intakeStart": [
+      "Tell me about yourselves. I'll remember everything.",
+      "Answer honestly. Or don't. I'll find out either way."
+    ],
+    "nudge": [
+      "Some of you are typing very slowly. I can see it.",
+      "Ten more seconds of thinking won't make it funnier. Or will it?",
+      "The clock is ticking and so is my patience."
+    ],
+    "thinking": [
+      "Give me a second. I'm reading your secrets.",
+      "Hold on. Something good is coming."
+    ],
+    "roundIntro": [
+      "Round {n}. Let's see what you've got.",
+      "Here comes round {n}. Brace yourselves."
+    ],
+    "duelWin": [
+      "{winner} takes it. {loser}, maybe next time try being funny.",
+      "The people have spoken. {winner} wins this one.",
+      "{winner} with the win. {loser}, that was brave. Wrong, but brave."
+    ],
+    "duelLandslide": [
+      "Total wipeout! Every single vote for {winner}.",
+      "A landslide for {winner}. {loser}, I'm so sorry."
+    ],
+    "duelTie": [
+      "A perfect tie. You're both equally ridiculous.",
+      "Split right down the middle. Nobody wins, everybody's embarrassed."
+    ],
+    "duelNoAnswer": [
+      "{missing} didn't answer, so {winner} wins by default. Easiest points ever.",
+      "{missing} went quiet. {winner} takes it without breaking a sweat."
+    ],
+    "duelNoAnswers": [
+      "Neither of you answered. I'll pretend that didn't happen."
+    ],
+    "whoReveal": [
+      "The group has decided: it's {name}. No appeals.",
+      "{name}, everyone agrees. Take a bow. Or hide.",
+      "It's {name}. Nobody is even surprised."
+    ],
+    "whoNobody": [
+      "Nobody voted. You're all protecting each other. Suspicious."
+    ],
+    "truthRevealTrue": [
+      "It's true! {name} really did that.",
+      "Believe it or not, that one is real. {name}, explain yourself."
+    ],
+    "truthRevealFake": [
+      "I made that up. {name} is innocent. This time.",
+      "Fake! I invented it. But admit it, it sounded like {name}."
+    ],
+    "skipped": [
+      "This line was skipped at a player's request."
+    ],
+    "finaleSpeech": [
+      "That's the game. {winner} wins, everyone else has some explaining to do. Same time next week?",
+      "And we're done. {winner} is the champion. I'll keep your secrets. Probably."
+    ]
+  },
+  "titles": {
+    "winner": "The one who can't be stopped",
+    "fastest": "Fastest thumbs in the room",
+    "fooler": "Master of the poker face",
+    "detective": "Sees through every lie",
+    "whoMagnet": "Everyone's first suspect",
+    "votes": "Crowd favourite",
+    "generic": [
+      "Suspiciously quiet genius",
+      "Here for the snacks",
+      "Chaos in human form",
+      "The dark horse",
+      "Should not be left unsupervised",
+      "Still thinking about their answer",
+      "Main character energy",
+      "The group's emotional support human"
+    ]
+  },
+  "labels": {
+    "blockedAnswer": "[The host won't show this answer]",
+    "noAnswer": "[No answer]",
+    "didntAnswer": "[{name} didn't answer]",
+    "toldMe": "{name} told me: “{text}”",
+    "hostPicks": "Nobody picked? Then I choose."
+  }
+}

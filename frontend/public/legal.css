@@ -1,0 +1,59 @@
+:root {
+  color-scheme: light;
+}
+body {
+  margin: 0;
+  background: #efe9f7;
+  color: #1d1433;
+  font:
+    17px/1.6 "Atkinson Hyperlegible",
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+}
+main {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+h1,
+h2 {
+  font-family: "Bricolage Grotesque Variable", "Arial Narrow", system-ui, sans-serif;
+  font-stretch: 88%;
+  line-height: 1.1;
+}
+h1 {
+  font-size: 2.5rem;
+  margin: 1.5rem 0 0.5rem;
+}
+h2 {
+  font-size: 1.4rem;
+  margin: 2.25rem 0 0.5rem;
+}
+.updated {
+  color: #6b5c8a;
+}
+a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+.fill {
+  padding: 0 0.2em;
+  background: #f5e663;
+  font-weight: 700;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+th,
+td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid #b7aad3;
+  text-align: left;
+  vertical-align: top;
+}
+.table-wrap {
+  overflow-x: auto;
+}

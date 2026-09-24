@@ -1,0 +1,241 @@
+/* Shared pieces of the party surfaces (shared screen, phones, viewers). */
+
+.timer {
+  display: inline-grid;
+  place-items: center;
+  min-width: 3.2rem;
+  height: 3.2rem;
+  padding: 0 var(--space-2);
+  border: 3px solid var(--marker);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.timerHuge {
+  min-width: 6rem;
+  height: 6rem;
+  border-width: 5px;
+  font-size: var(--step-4);
+}
+
+.timer[data-urgent] {
+  border-color: var(--blush);
+  color: var(--blush);
+  animation: throb 1s var(--ease-out) infinite;
+}
+
+@keyframes throb {
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.avatar {
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid var(--paper);
+  border-radius: 50%;
+  background: var(--night-raised);
+  font-size: 1.6rem;
+  line-height: 1;
+  transition:
+    opacity 200ms,
+    filter 200ms;
+}
+
+.avatar[data-off] {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+.small {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-width: 2px;
+  font-size: 1.1rem;
+}
+
+.large {
+  width: 6rem;
+  height: 6rem;
+  border-width: 4px;
+  font-size: 3.4rem;
+}
+
+.crown {
+  position: absolute;
+  top: -0.9em;
+  right: -0.35em;
+  font-size: 0.6em;
+}
+
+.badge {
+  position: absolute;
+  bottom: -0.45rem;
+  left: 50%;
+  translate: -50% 0;
+  padding: 0 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--marker);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.chip[data-off] {
+  opacity: 0.55;
+}
+
+.chipName {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chipDetail {
+  margin-left: auto;
+  color: var(--dusk-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.host {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  max-width: 48ch;
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  border: 2px solid var(--dusk-light);
+  border-radius: var(--radius-box) var(--radius-box) var(--radius-box) var(--radius-sheet);
+  background: var(--night-raised);
+  font-size: var(--step-1);
+  line-height: 1.35;
+}
+
+.hostLarge {
+  max-width: 40ch;
+  font-size: var(--step-2);
+}
+
+.host[data-speaking] {
+  border-color: var(--marker);
+}
+
+.host[data-skipped] {
+  color: var(--dusk-light);
+  font-style: italic;
+}
+
+.hostMark {
+  flex: none;
+}
+
+.typing {
+  align-items: center;
+  color: var(--dusk-light);
+}
+
+.dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: blink 1.2s infinite;
+}
+
+.dots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.banner {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--marker);
+  color: var(--ink);
+  font-weight: 700;
+  text-align: center;
+}
+
+.bannerBad {
+  background: var(--alarm-on-night);
+}
+
+.banner button {
+  min-height: 2.25rem;
+  padding: 0 var(--space-4);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.qr {
+  padding: var(--space-3);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-box);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-sticker-night);
+  line-height: 0;
+}
+
+.qr svg {
+  width: 100%;
+  height: auto;
+}
+
+.qr[data-pulse] {
+  animation: pulse 2s var(--ease-out) infinite;
+}
+
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 0 14px color-mix(in srgb, var(--marker) 35%, transparent);
+  }
+}

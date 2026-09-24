@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.insidejoke</groupId>
+        <artifactId>inside-joke</artifactId>
+        <version>0.8.2</version>
+    </parent>
+
+    <artifactId>frontend</artifactId>
+    <packaging>jar</packaging>
+    <name>Inside Joke frontend</name>
+    <description>React + TypeScript + Vite SPA, packaged as static resources for the backend</description>
+
+    <properties>
+        <!-- Node.js 22.12+ must be on PATH. Set -Dfrontend.skip=true to reuse the last build. -->
+        <npm.executable>npm</npm.executable>
+        <frontend.skip>false</frontend.skip>
+        <frontend.test.skip>${skipTests}</frontend.test.skip>
+        <skipTests>false</skipTests>
+    </properties>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/dist</directory>
+                <targetPath>static</targetPath>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <executable>${npm.executable}</executable>
+                    <workingDirectory>${project.basedir}</workingDirectory>
+                    <skip>${frontend.skip}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>npm-ci</id>
+                        <phase>initialize</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <arguments><argument>ci</argument><argument>--no-audit</argument><argument>--no-fund</argument></arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-typecheck</id>
+                        <phase>generate-sources</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <arguments><argument>run</argument><argument>typecheck</argument></arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Formatting (Prettier); fix with: npm run format -->
+                        <id>npm-format-check</id>
+                        <phase>generate-sources</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <arguments><argument>run</argument><argument>format:check</argument></arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-lint</id>
+                        <phase>generate-sources</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <arguments><argument>run</argument><argument>lint</argument></arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-build</id>
+                        <phase>generate-resources</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <arguments><argument>run</argument><argument>build</argument></arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-test</id>
+                        <phase>test</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <skip>${frontend.test.skip}</skip>
+                            <arguments><argument>test</argument></arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>frontend-skip</id>
+            <activation>
+                <property><name>frontend.skip</name><value>true</value></property>
+            </activation>
+            <properties>
+                <frontend.test.skip>true</frontend.test.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os><family>windows</family></os>
+            </activation>
+            <properties>
+                <npm.executable>npm.cmd</npm.executable>
+            </properties>
+        </profile>
+    </profiles>
+</project>

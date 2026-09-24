@@ -1,0 +1,46 @@
+.code {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 3.4rem));
+  gap: var(--space-2);
+}
+
+/* A wider gap between digit 3 and 4 mirrors the "123 456" formatting in the email. */
+.cell:nth-child(4) {
+  margin-left: var(--space-3);
+}
+
+.cell {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sheet);
+  background: var(--paper-raised);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  caret-color: var(--blush);
+}
+
+.cell:focus-visible {
+  background: var(--marker);
+}
+
+.cell:disabled {
+  opacity: 0.5;
+}
+
+.invalid .cell {
+  border-color: var(--alarm);
+}
+
+@media (max-width: 380px) {
+  .code {
+    gap: var(--space-1);
+  }
+
+  .cell:nth-child(4) {
+    margin-left: var(--space-2);
+  }
+}
