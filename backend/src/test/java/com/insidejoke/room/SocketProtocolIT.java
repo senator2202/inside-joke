@@ -112,6 +112,38 @@ class SocketProtocolIT extends AbstractIntegrationTest {
         }
     }
 
+    /** The engine's decisions reach the phones: a kick is a "kicked" frame, a 4403 close, and a token that is dead. */
+    @Test
+    void aKickedPhoneIsToldDisconnectedAndCannotComeBack() {
+        try (Party party = Party.create(port, json, FAKE, 4)) {
+            Party.Phone victim = party.phones.get(3);
+            party.screen.ok("player.kick", Map.of("playerId", victim.id()));
+            Await.until("kick notice", () -> victim.socket().received("kicked"));
+            Await.until(
+                    "socket closed",
+                    () -> Integer.valueOf(4403).equals(victim.socket().closeCode()));
+            assertThat(party.screen.state(s -> s.path("players").size() == 3)).isNotNull();
+            GameSocket again = new GameSocket(port, json);
+            assertThat(again.error("hello", Map.of("token", victim.token()))).isEqualTo("ROOM_NOT_FOUND");
+            again.abort();
+        }
+    }
+
+    /** Closing the room tells every connection and ends it; the tokens no longer open anything. */
+    @Test
+    void aClosedRoomSaysGoodbyeToEveryConnection() {
+        try (Party party = Party.create(port, json, FAKE, 3)) {
+            party.screen.ok("room.close", Map.of());
+            Await.until("phones told", () -> party.phones.get(1).socket().received("closed"));
+            Await.until("screen told", () -> party.screen.received("closed"));
+            assertThat(party.screen.latest().path("phase").asString()).isEqualTo("CLOSED");
+            GameSocket late = new GameSocket(port, json);
+            assertThat(late.error("hello", Map.of("token", party.phones.get(0).token())))
+                    .isEqualTo("ROOM_NOT_FOUND");
+            late.abort();
+        }
+    }
+
     /** A client re-sends what was in flight when its connection dropped: answered again, applied once. */
     @Test
     void aRequestReSentAfterAReconnectIsAnsweredButAppliedOnce() {

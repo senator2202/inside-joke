@@ -3,9 +3,11 @@ package com.insidejoke.common;
 import java.net.http.HttpClient;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.random.RandomGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,6 +33,15 @@ public class CoreConfig {
     @Bean(destroyMethod = "close")
     public ExecutorService ioExecutor() {
         return Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    /**
+     * Chance in the game: duel pairs, the truth-or-invention coin, the host's pick. {@link Random} is safe
+     * to share between threads; unit tests pass a seeded one instead, so a game replays exactly.
+     */
+    @Bean
+    public RandomGenerator gameRandom() {
+        return new Random();
     }
 
     /** One shared timer thread for phase deadlines, broadcast coalescing and housekeeping. */

@@ -25,11 +25,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.random.RandomGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -40,7 +40,8 @@ import tools.jackson.databind.node.NullNode;
 /**
  * The game rules. Every change to a room runs through {@link #mutate} under that room's lock, strictly one at a
  * time (blueprint 4.2). Anything slow (AI, database, speech) runs in a virtual thread via {@link #async} and comes
- * back as a new command, so no lock is ever held across a network call.
+ * back as a new command, so no lock is ever held across a network call. Chance (duel pairs, the host's picks) comes
+ * from the injected {@link RandomGenerator}, so a test with a seeded one replays a game exactly.
  */
 @Service
 public class GameEngineService implements GameRuntimeService {
@@ -70,6 +71,7 @@ public class GameEngineService implements GameRuntimeService {
     private final ModerationEventRepository moderationEvents;
     private final AnalyticsService analytics;
     private final RoomEventListener events;
+    private final RandomGenerator random;
     private LobbyPhaseHandler lobby;
     private IntakePhaseHandler intake;
     private RoundPhaseHandler rounds;
@@ -92,7 +94,8 @@ public class GameEngineService implements GameRuntimeService {
             GameSessionRepository sessions,
             ModerationEventRepository moderationEvents,
             AnalyticsService analytics,
-            RoomEventListener events) {
+            RoomEventListener events,
+            RandomGenerator gameRandom) {
         this.registry = registry;
         this.props = props;
         this.settings = settings;
@@ -107,6 +110,7 @@ public class GameEngineService implements GameRuntimeService {
         this.moderationEvents = moderationEvents;
         this.analytics = analytics;
         this.events = events;
+        this.random = gameRandom;
     }
 
     /**
@@ -115,11 +119,11 @@ public class GameEngineService implements GameRuntimeService {
      */
     @PostConstruct
     void wire() {
-        lobby = new LobbyPhaseHandler(this, props, clock, fallback, access, analytics, events);
+        lobby = new LobbyPhaseHandler(this, props, clock, fallback, access, analytics, events, random);
         intake = new IntakePhaseHandler(this, props, ai, analytics);
-        rounds = new RoundPhaseHandler(this, props, ai, fallback, analytics);
+        rounds = new RoundPhaseHandler(this, props, ai, fallback, analytics, random);
         voting = new VotingPhaseHandler(this, props, ai);
-        finale = new FinalePhaseHandler(this, ai, fallback);
+        finale = new FinalePhaseHandler(this, ai, fallback, random);
         commands = commandTable();
         phases = new EnumMap<>(Phase.class);
         phases.put(Phase.INTAKE, intake::endIntake);
@@ -146,8 +150,7 @@ public class GameEngineService implements GameRuntimeService {
         RoomState room = registry.register((code, audienceKey) -> {
             RoomState r = new RoomState(code, audienceKey, ownerUserId, TokenUtils.random(18), roomSettings, now);
             r.putMember(r.getOwnerToken(), new Member(r.getOwnerToken(), MemberKind.OWNER_SCREEN, null, null));
-            r.setIntakeQuestions(fallback.intakeQuestions(
-                    roomSettings.language(), roomSettings.tone(), ThreadLocalRandom.current()));
+            r.setIntakeQuestions(fallback.intakeQuestions(roomSettings.language(), roomSettings.tone(), random));
             return r;
         });
         mutate(room, r -> say(r, line(r, "lobbyWaiting", Map.of()), Set.of()));
@@ -236,7 +239,7 @@ public class GameEngineService implements GameRuntimeService {
             }
             String emoji = rawEmoji != null && EMOJIS.contains(rawEmoji)
                     ? rawEmoji
-                    : EMOJIS.get(ThreadLocalRandom.current().nextInt(EMOJIS.size()));
+                    : EMOJIS.get(random.nextInt(EMOJIS.size()));
             String token = TokenUtils.random(18);
             PlayerState p = new PlayerState(r.nextId("p"), token, name, emoji, clock.instant());
             p.setDisconnectedAt(clock.instant());
@@ -719,7 +722,7 @@ public class GameEngineService implements GameRuntimeService {
 
     @Override
     public String line(RoomState r, String kind, Map<String, String> values) {
-        String text = fallback.line(r.getSettings().language(), kind, ThreadLocalRandom.current());
+        String text = fallback.line(r.getSettings().language(), kind, random);
         for (Map.Entry<String, String> e : values.entrySet()) {
             text = text.replace("{" + e.getKey() + "}", e.getValue());
         }
