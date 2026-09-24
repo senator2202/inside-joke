@@ -24,6 +24,8 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * The /ws endpoint (blueprint 9). The first message must be {@code hello} with a room token, within 5 seconds.
  * Envelope: {"v":1,"type":"...","reqId":"...","data":{...}}. Server replies: state, ok, error, kicked, closed, pong.
+ * A {@code reqId} must not repeat for the same room token: a request re-sent with the same reqId (after a reconnect)
+ * is not run again and gets the first answer.
  */
 @Component
 public class GameSocketHandler extends TextWebSocketHandler {
@@ -114,7 +116,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
             error(c, reqId, new ApiException(ErrorCode.BAD_MESSAGE, "Already connected."));
             return;
         }
-        engine.command(c.room, c.member, type, data, reply(c, reqId));
+        engine.command(c.room, c.member, reqId, type, data, reply(c, reqId));
     }
 
     private void hello(ConnectionHandler c, String reqId, String token) {

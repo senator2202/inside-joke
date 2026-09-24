@@ -20,7 +20,9 @@ public final class GameSocket implements AutoCloseable {
     private final JsonMapper json;
     private final List<JsonNode> frames = new CopyOnWriteArrayList<>();
     private final List<String> raw = new CopyOnWriteArrayList<>();
-    private final AtomicInteger reqIds = new AtomicInteger();
+    /** Shared by all sockets: like a real client, a reconnect of the same token never reuses a reqId. */
+    private static final AtomicInteger REQ_IDS = new AtomicInteger();
+
     private final WebSocket socket;
     private volatile Integer closeCode;
 
@@ -72,7 +74,11 @@ public final class GameSocket implements AutoCloseable {
     }
 
     public String send(String type, Object data) {
-        String reqId = "t-" + reqIds.incrementAndGet();
+        return send(type, data, "t-" + REQ_IDS.incrementAndGet());
+    }
+
+    /** Sends a request with a chosen reqId, e.g. to re-send one as a client does after reconnecting. */
+    public String send(String type, Object data, String reqId) {
         sendRaw(json.writeValueAsString(Map.of("v", 1, "type", type, "reqId", reqId, "data", data)));
         return reqId;
     }

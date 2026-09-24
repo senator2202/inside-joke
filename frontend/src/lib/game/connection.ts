@@ -65,6 +65,11 @@ export class GameConnection {
   private everConnected = false;
   private attempts = 0;
   private lostAt: number | null = null;
+  /**
+   * Request ids start with a random prefix: the server answers a re-sent reqId from its memory instead of running it
+   * again, so a new connection object (a reloaded page) must never repeat the ids of an earlier one.
+   */
+  private readonly idPrefix = Math.random().toString(36).slice(2, 10);
   private seq = 0;
   private readonly pending = new Map<string, Pending>();
   private timers = new Set<ReturnType<typeof setTimeout>>();
@@ -106,7 +111,7 @@ export class GameConnection {
   request(type: string, data: unknown = {}): Promise<Record<string, unknown>> {
     if (FINAL.has(this.status)) return Promise.reject(new GameError("ROOM_NOT_FOUND", "This party is over."));
     return new Promise((resolve, reject) => {
-      const reqId = `c-${++this.seq}`;
+      const reqId = `${this.idPrefix}-${++this.seq}`;
       this.pending.set(reqId, { type, data, resolve, reject, attempts: 0, sent: false });
       if (this.ready) this.transmit(reqId);
     });
@@ -245,7 +250,8 @@ export class GameConnection {
     this.ready = false;
     this.socket = null;
     if (this.pingTimer) clearInterval(this.pingTimer);
-    // Requests in flight when the socket dropped are re-sent after reconnecting.
+    // Requests in flight when the socket dropped are re-sent after reconnecting, with the same reqId: the server
+    // answers a copy of a request it already ran without running it twice.
     for (const p of this.pending.values()) p.sent = false;
     if (code === 4404) {
       this.setStatus("gone");
