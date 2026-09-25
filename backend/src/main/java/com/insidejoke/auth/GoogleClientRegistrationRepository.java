@@ -1,6 +1,9 @@
 package com.insidejoke.auth;
 
+import com.insidejoke.common.AppProperties;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
@@ -13,11 +16,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class GoogleClientRegistrationRepository {
 
+    private static final Logger log = LoggerFactory.getLogger(GoogleClientRegistrationRepository.class);
+
     public static final String REGISTRATION_ID = "google";
 
     private final Optional<ClientRegistrationRepository> repository;
 
-    public GoogleClientRegistrationRepository(GoogleProperties google) {
+    public GoogleClientRegistrationRepository(GoogleProperties google, AppProperties app) {
+        log.info(describe(google, app.publicUrl()));
         if (!google.enabled()) {
             this.repository = Optional.empty();
             return;
@@ -46,5 +52,21 @@ public class GoogleClientRegistrationRepository {
 
     public boolean enabled() {
         return repository.isPresent();
+    }
+
+    /** One startup line: whether the sign-in page offers Google, and what to fix or register. */
+    static String describe(GoogleProperties google, String publicUrl) {
+        if (google.enabled()) {
+            return "Google sign-in is on. Redirect URI to register in Google Cloud: " + publicUrl
+                    + "/login/oauth2/code/google";
+        }
+        boolean noId = google.clientId() == null || google.clientId().isBlank();
+        boolean noSecret =
+                google.clientSecret() == null || google.clientSecret().isBlank();
+        String missing = noId && noSecret
+                ? "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are"
+                : noId ? "GOOGLE_CLIENT_ID is" : "GOOGLE_CLIENT_SECRET is";
+        return "Google sign-in is off: " + missing + " not set (environment or .env in the working directory), "
+                + "so the sign-in page shows only the email code";
     }
 }

@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { apiError, mockFetch } from "../../test/fetchMock";
 import { renderRoute } from "../../test/render";
 import { LoginPage } from "./LoginPage";
@@ -29,6 +29,27 @@ describe("LoginPage", () => {
     renderRoute("/login", "/login", <LoginPage />);
     expect(await screen.findByRole("button", { name: /Continue with Google/ })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Sign in to host a party" })).toBeInTheDocument();
+  });
+
+  it("asks again when the sign-in options fail to load, and then offers Google", async () => {
+    setup({
+      "GET /api/auth/config": [
+        { status: 404, body: { error: { code: "NOT_FOUND", message: "Not found." } } },
+        { status: 200, body: { googleEnabled: true } },
+      ],
+    });
+    renderRoute("/login", "/login", <LoginPage />);
+    expect(await screen.findByRole("button", { name: /Continue with Google/ }, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.queryByText(/Couldn't load the sign-in options/)).not.toBeInTheDocument();
+  });
+
+  it("says so, instead of silently hiding Google, when the sign-in options never load", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    setup({ "GET /api/auth/config": { status: 404, body: { error: { code: "NOT_FOUND", message: "Not found." } } } });
+    renderRoute("/login", "/login", <LoginPage />);
+    expect(await screen.findByText(/Couldn't load the sign-in options/, undefined, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Continue with Google/ })).not.toBeInTheDocument();
+    expect(warn).toHaveBeenCalled();
   });
 
   it("hides Google when the server has no client configured", async () => {

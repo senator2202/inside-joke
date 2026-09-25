@@ -104,6 +104,7 @@ export const en = {
   "login.err.rate": "Too many attempts. Try again in an hour or continue with Google.",
   "login.err.send": "We couldn't send the email. Continue with Google instead.",
   "login.err.network": "Can't reach the server. Check your connection and try again.",
+  "login.err.config": "Couldn't load the sign-in options from the server, so Google sign-in may be missing. Refresh the page.",
   "login.openingGoogle": "Opening Google",
   "login.google": "Continue with Google",
   "login.or": "or",

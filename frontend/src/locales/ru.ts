@@ -106,6 +106,7 @@ export const ru: Record<MessageKey, string> & Record<string, string> = {
   "login.err.rate": "Слишком много попыток. Попробуйте через час или войдите через Google.",
   "login.err.send": "Не удалось отправить письмо. Войдите через Google.",
   "login.err.network": "Сервер недоступен. Проверьте подключение и попробуйте снова.",
+  "login.err.config": "Не удалось загрузить способы входа с сервера, поэтому вход через Google может не отображаться. Обновите страницу.",
   "login.openingGoogle": "Открываем Google",
   "login.google": "Продолжить с Google",
   "login.or": "или",

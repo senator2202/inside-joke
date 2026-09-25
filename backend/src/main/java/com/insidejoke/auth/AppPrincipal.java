@@ -5,7 +5,10 @@ import java.io.Serializable;
 import java.security.Principal;
 import java.util.UUID;
 
-/** The signed-in host stored in the server-side session (Spring Session JDBC serializes it). */
+/**
+ * The signed-in host stored in the server-side session (Spring Session JDBC serializes it). {@code role} is a snapshot
+ * from sign-in and grants nothing: admin access is checked on every request by {@link AdminAccessService}.
+ */
 public record AppPrincipal(UUID id, String email, String role) implements Serializable, Principal {
 
     @Serial
@@ -18,9 +21,5 @@ public record AppPrincipal(UUID id, String email, String role) implements Serial
     @Override
     public String getName() {
         return id.toString();
-    }
-
-    public boolean isAdmin() {
-        return "ADMIN".equals(role);
     }
 }

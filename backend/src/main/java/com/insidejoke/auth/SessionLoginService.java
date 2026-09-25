@@ -22,9 +22,8 @@ public class SessionLoginService {
 
     public void establish(UserEntity user, HttpServletRequest request, HttpServletResponse response) {
         AppPrincipal principal = user.toPrincipal();
-        List<SimpleGrantedAuthority> authorities = principal.isAdmin()
-                ? List.of(new SimpleGrantedAuthority("ROLE_HOST"), new SimpleGrantedAuthority("ROLE_ADMIN"))
-                : List.of(new SimpleGrantedAuthority("ROLE_HOST"));
+        // Admin access is decided per request by AdminAccessService, never by an authority kept in the session.
+        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_HOST"));
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(principal, null, authorities));
         SecurityContextHolder.setContext(context);

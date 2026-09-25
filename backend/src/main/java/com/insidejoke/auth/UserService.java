@@ -32,8 +32,8 @@ public class UserService {
         String email = normalizeEmail(rawEmail);
         Instant now = clock.instant();
         return users.findActiveByEmail(email)
-                .map(u -> users.recordLogin(u.id(), null, null, roleFor(email, u.role()), now))
-                .orElseGet(() -> users.insert(email, null, null, roleFor(email, "HOST"), now));
+                .map(u -> users.recordLogin(u.id(), null, null, roleFor(email), now))
+                .orElseGet(() -> users.insert(email, null, null, roleFor(email), now));
     }
 
     /** Signs in or registers a host through Google; links an existing email account on first use. */
@@ -44,11 +44,11 @@ public class UserService {
         Optional<UserEntity> bySub = users.findActiveByGoogleSub(sub);
         if (bySub.isPresent()) {
             UserEntity u = bySub.get();
-            return users.recordLogin(u.id(), name, sub, roleFor(u.email(), u.role()), now);
+            return users.recordLogin(u.id(), name, sub, roleFor(u.email()), now);
         }
         return users.findActiveByEmail(email)
-                .map(u -> users.recordLogin(u.id(), name, sub, roleFor(email, u.role()), now))
-                .orElseGet(() -> users.insert(email, name, sub, roleFor(email, "HOST"), now));
+                .map(u -> users.recordLogin(u.id(), name, sub, roleFor(email), now))
+                .orElseGet(() -> users.insert(email, name, sub, roleFor(email), now));
     }
 
     /** Active accounts whose email contains the fragment, newest first (admin search). */
@@ -68,8 +68,9 @@ public class UserService {
         events.publishEvent(new AccountDeletedEvent(id, now));
     }
 
-    private String roleFor(String email, String current) {
-        return props.isAdminEmail(email) ? "ADMIN" : current;
+    /** The stored role follows APP_ADMIN_EMAILS at every sign-in; access to the admin panel is checked live anyway. */
+    private String roleFor(String email) {
+        return props.isAdminEmail(email) ? "ADMIN" : "HOST";
     }
 
     public static String normalizeEmail(String email) {

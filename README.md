@@ -60,7 +60,9 @@ docker-compose.yml      PostgreSQL для локальной разработк�
 3. В списке конфигураций запуска появятся конфигурации из папки `.run`:
    - **Backend (local)** — запускает приложение с профилем `local` из корня проекта;
    - **Frontend dev server** — `npm run dev` (конфигурация npm доступна в IntelliJ IDEA Ultimate; в Community выполните
-     `npm run dev` в терминале из папки `frontend`);
+     `npm run dev` в терминале из папки `frontend`). Дев-сервер передаёт `/api`, `/oauth2` и `/ws` на
+     `http://127.0.0.1:8080` (другой адрес — в переменной `BACKEND_URL`) и при запуске пишет, какой бэкенд видит
+     (`Backend: Inside Joke …`), или предупреждает, если по этому адресу отвечает что-то другое;
    - **Verify (all checks)** — полная проверка (`./mvnw -B verify`, в Windows `.\mvnw.cmd -B verify`);
    - **Backend tests** — только тесты backend'а.
 
@@ -139,7 +141,7 @@ npm run dev
 
 Одна команда проверяет всё: формат кода (Spotless, Prettier), checkstyle, модульные тесты бэкенда (Surefire, фаза
 `test`), интеграционные тесты на встроенном PostgreSQL (Failsafe, фаза `verify`), а также typecheck, ESLint, сборку и
-тесты фронтенда. На момент сдачи: **backend 332 теста (210 модульных и 122 интеграционных), frontend 127 тестов, 0 падений, 0 нарушений checkstyle**.
+тесты фронтенда. На момент сдачи: **backend 342 теста (217 модульных и 125 интеграционных), frontend 129 тестов, 0 падений, 0 нарушений checkstyle**.
 
 Покрытие считает JaCoCo: `backend/target/site/jacoco/index.html` — только модульные тесты (после `test`),
 `backend/target/site/jacoco-all/index.html` — все тесты вместе (после `verify`). Правила игры (пакет `game`) должны быть

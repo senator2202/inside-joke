@@ -25,6 +25,10 @@ interface SendResult {
 type Step = "email" | "code";
 
 /** H2 (sign in) and H2b (code from the email) share one route so "Change email" keeps what was typed. */
+/** The sign-in options are asked for up to three times, 0.3 s and 0.6 s apart, before the page says it couldn't. */
+const CONFIG_ATTEMPTS = 3;
+const CONFIG_RETRY_MS = 300;
+
 export function LoginPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -33,6 +37,7 @@ export function LoginPage() {
   const returnTo = safeReturnTo(params.get("returnTo"));
 
   const [config, setConfig] = useState<AuthConfig | null>(null);
+  const [configFailed, setConfigFailed] = useState(false);
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -48,10 +53,28 @@ export function LoginPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    api<AuthConfig>("/api/auth/config", { signal: controller.signal })
-      .then(setConfig)
-      .catch(() => setConfig({ googleEnabled: false }));
-    return () => controller.abort();
+    let attempt = 0;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const load = () => {
+      api<AuthConfig>("/api/auth/config", { signal: controller.signal })
+        .then(setConfig)
+        .catch((e: unknown) => {
+          if (controller.signal.aborted) return; // the page was left: that is not an answer
+          attempt += 1;
+          if (attempt < CONFIG_ATTEMPTS) {
+            retry = setTimeout(load, attempt * CONFIG_RETRY_MS);
+            return;
+          }
+          console.warn("Sign-in options could not be loaded from /api/auth/config", e);
+          setConfig({ googleEnabled: false });
+          setConfigFailed(true);
+        });
+    };
+    load();
+    return () => {
+      controller.abort();
+      clearTimeout(retry);
+    };
   }, []);
 
   useEffect(() => {
@@ -153,6 +176,7 @@ export function LoginPage() {
           {formError === "rate" && <Notice tone="error">{t("login.err.rate")}</Notice>}
           {formError === "send" && <Notice tone="error">{t("login.err.send")}</Notice>}
           {formError === "network" && <Notice tone="error">{t("login.err.network")}</Notice>}
+          {configFailed && <Notice tone="error">{t("login.err.config")}</Notice>}
 
           {config?.googleEnabled && (
             <>

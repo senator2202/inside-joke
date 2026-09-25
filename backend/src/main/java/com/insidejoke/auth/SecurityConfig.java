@@ -32,8 +32,8 @@ public class SecurityConfig {
             SecurityContextRepository contextRepository,
             JsonSecurityHandler handlers,
             GoogleClientRegistrationRepository google,
-            ObjectProvider<GoogleLoginSuccessHandler> googleSuccess)
-            throws Exception {
+            ObjectProvider<GoogleLoginSuccessHandler> googleSuccess,
+            AdminAccessService admins) {
         http.csrf(csrf -> csrf.spa().ignoringRequestMatchers("/api/webhooks/**", "/api/events"))
                 .securityContext(sc -> sc.securityContextRepository(contextRepository))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/admin/**")
-                        .hasRole("ADMIN")
+                        .access(admins.adminPaths())
                         .requestMatchers(HttpMethod.POST, "/api/rooms")
                         .authenticated()
                         .requestMatchers("/api/rooms/*/owner-token")

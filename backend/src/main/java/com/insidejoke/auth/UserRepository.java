@@ -4,6 +4,9 @@ import com.insidejoke.common.DbUtils;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -77,6 +80,21 @@ public class UserRepository {
 
     public void setRole(UUID id, String role) {
         jdbc.sql("UPDATE app_user SET role = ? WHERE id = ?").params(role, id).update();
+    }
+
+    /**
+     * Makes every active account listed in {@code adminEmails} (lower-case) an admin and every other one a host; returns
+     * how many rows changed.
+     */
+    public int syncAdminRoles(Collection<String> adminEmails) {
+        String listed =
+                adminEmails.isEmpty() ? "NULL" : String.join(", ", Collections.nCopies(adminEmails.size(), "?"));
+        String role = "CASE WHEN lower(email) IN (" + listed + ") THEN 'ADMIN' ELSE 'HOST' END";
+        List<Object> params = new ArrayList<>(adminEmails);
+        params.addAll(adminEmails);
+        return jdbc.sql("UPDATE app_user SET role = " + role + " WHERE deleted_at IS NULL AND role <> " + role)
+                .params(params)
+                .update();
     }
 
     static UserEntity map(ResultSet rs, int row) throws SQLException {
