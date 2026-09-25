@@ -139,7 +139,7 @@ npm run dev
 
 Одна команда проверяет всё: формат кода (Spotless, Prettier), checkstyle, модульные тесты бэкенда (Surefire, фаза
 `test`), интеграционные тесты на встроенном PostgreSQL (Failsafe, фаза `verify`), а также typecheck, ESLint, сборку и
-тесты фронтенда. На момент сдачи: **backend 329 тестов (210 модульных и 119 интеграционных), frontend 127 тестов, 0 падений, 0 нарушений checkstyle**.
+тесты фронтенда. На момент сдачи: **backend 332 теста (210 модульных и 122 интеграционных), frontend 127 тестов, 0 падений, 0 нарушений checkstyle**.
 
 Покрытие считает JaCoCo: `backend/target/site/jacoco/index.html` — только модульные тесты (после `test`),
 `backend/target/site/jacoco-all/index.html` — все тесты вместе (после `verify`). Правила игры (пакет `game`) должны быть
@@ -217,6 +217,10 @@ npm run format:check
   `APP_COOKIE_SECURE=true` (по умолчанию), `APP_PUBLIC_URL=https://…`, `AI_REQUIRE_LLM_MODERATION=true`.
   Вне профиля `local` сервер не запустится без `DATABASE_PASSWORD` (значения по умолчанию нет) и с
   `MAIL_PROVIDER=log` (этот режим пишет коды входа в лог) — нужен `resend` или `smtp`.
+- **За Cloudflare или другим публичным прокси** задайте `APP_TRUSTED_PROXIES` — его сети в формате CIDR через запятую
+  (готовое значение для Cloudflare — в `.env.example`, актуальный список — https://www.cloudflare.com/ips/). Иначе
+  каждый клиент получит адрес прокси: лимиты по IP станут общими для всех, а `X-Forwarded-Proto` не будет учтён.
+  Внутренние сети (балансировщик в той же сети) доверены всегда.
 - **Paddle:** URL вебхука `https://<домен>/api/webhooks/paddle`, события `transaction.completed`, `adjustment.created`,
   `adjustment.updated`. Секрет подписи — в `PADDLE_WEBHOOK_SECRET`.
 - **Google OAuth:** redirect URI `https://<домен>/login/oauth2/code/google`.

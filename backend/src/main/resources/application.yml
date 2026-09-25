@@ -33,7 +33,14 @@ spring:
 
 server:
   port: ${PORT:8080}
+  # X-Forwarded-For/-Proto are applied by Tomcat only when they come from a known proxy: the internal networks (Spring
+  # Boot's default) or APP_TRUSTED_PROXIES. The client is the first address from the right that isn't a known proxy.
   forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      # Public proxies in front of the app (Cloudflare, a CDN) as CIDR ranges, comma-separated. Without them every
+      # client behind the proxy gets the proxy's address, and per-IP limits become shared (docs/AUDIT.md, item 8).
+      trusted-proxies: ${APP_TRUSTED_PROXIES:}
   shutdown: graceful
   servlet:
     session:
