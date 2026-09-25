@@ -71,6 +71,18 @@ public class EntitlementRepository {
                 .list();
     }
 
+    /**
+     * When the not-revoked pass of this kind that runs longest ends, if it runs past {@code now}. Counts passes that
+     * haven't started yet: a pass bought while another waits its turn goes after that one.
+     */
+    public Optional<Instant> findLastEnd(UUID userId, Product type, Instant now) {
+        return jdbc.sql("SELECT ends_at FROM entitlement WHERE user_id = ? AND type = ? AND revoked_at IS NULL "
+                        + "AND ends_at > ? ORDER BY ends_at DESC LIMIT 1")
+                .params(userId, type.name(), DbUtils.ts(now))
+                .query((rs, n) -> DbUtils.instant(rs, "ends_at"))
+                .optional();
+    }
+
     public Optional<EntitlementEntity> findByPurchase(UUID purchaseId) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM entitlement WHERE purchase_id = ?")
                 .param(purchaseId)
@@ -114,7 +126,10 @@ public class EntitlementRepository {
                 reason == null ? null : RevokeReason.valueOf(reason));
     }
 
-    /** Serializes access decisions for one host until the surrounding transaction ends (two tabs can't both start a free game). */
+    /**
+     * Serializes access decisions and pass purchases for one host until the surrounding transaction ends: two tabs
+     * can't both start a free game, and two payments arriving together can't both start their pass at the same moment.
+     */
     public void lockHost(UUID hostUserId) {
         jdbc.sql("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))")
                 .param("game-access:" + hostUserId)

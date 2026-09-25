@@ -8,6 +8,7 @@ import com.insidejoke.support.Await;
 import com.insidejoke.support.FakeAi;
 import com.insidejoke.support.Party;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -170,18 +171,45 @@ class PaddleWebhookIT extends AbstractIntegrationTest {
 
         deliver(completed("evt_b2", "txn_b2", "pri_party", host));
         deliver(completed("evt_b3", "txn_b3", "pri_party", host));
-        List<Instant[]> parties = jdbc.sql(
-                        "SELECT starts_at, ends_at FROM entitlement WHERE user_id = ? AND type = 'PARTY_PASS' "
-                                + "ORDER BY starts_at")
+        List<Instant[]> parties = partyPasses(host);
+        assertThat(parties).hasSize(2);
+        assertThat(parties.get(1)[0])
+                .as("the second Party Pass starts when the first ends")
+                .isEqualTo(parties.get(0)[1]);
+    }
+
+    /** The Party Passes of a host that are not revoked, in the order they run: start and end of each. */
+    private List<Instant[]> partyPasses(UUID host) {
+        return jdbc.sql("SELECT starts_at, ends_at FROM entitlement WHERE user_id = ? AND type = 'PARTY_PASS' "
+                        + "AND revoked_at IS NULL ORDER BY starts_at")
                 .param(host)
                 .query((rs, n) -> new Instant[] {
                     rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant()
                 })
                 .list();
-        assertThat(parties).hasSize(2);
-        assertThat(parties.get(1)[0])
-                .as("the second Party Pass starts when the first ends")
-                .isEqualTo(parties.get(0)[1]);
+    }
+
+    @Test
+    void eachPassBoughtAheadGoesAfterTheLastOneEvenIfThatHasNotStartedYet() {
+        UUID host = newHost();
+        deliver(completed("evt_q1", "txn_q1", "pri_party", host));
+        deliver(completed("evt_q2", "txn_q2", "pri_party", host));
+        deliver(completed("evt_q3", "txn_q3", "pri_party", host));
+
+        List<Instant[]> passes = partyPasses(host);
+        assertThat(passes).hasSize(3);
+        assertThat(passes.get(1)[0]).as("the second starts when the first ends").isEqualTo(passes.get(0)[1]);
+        assertThat(passes.get(2)[0])
+                .as("the third starts when the second ends, not on top of it")
+                .isEqualTo(passes.get(1)[1]);
+
+        jdbc.sql("UPDATE entitlement SET revoked_at = ?, revoke_reason = 'ADMIN' WHERE user_id = ? AND starts_at = ?")
+                .params(Timestamp.from(clock.instant()), host, Timestamp.from(passes.get(2)[0]))
+                .update();
+        deliver(completed("evt_q4", "txn_q4", "pri_party", host));
+        assertThat(partyPasses(host).getLast()[0])
+                .as("a revoked pass keeps no place in the queue")
+                .isEqualTo(passes.get(1)[1]);
     }
 
     @Test

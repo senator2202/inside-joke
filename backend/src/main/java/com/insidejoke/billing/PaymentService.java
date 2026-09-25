@@ -117,13 +117,10 @@ public class PaymentService {
         if (recorded.isEmpty()) {
             return Handled.of(Result.ALREADY_DONE, "This payment was already recorded.");
         }
-        // A second pass of the same kind starts when the current one ends instead of overlapping it.
-        Instant start = entitlements.findActive(userId, now).stream()
-                .filter(e -> e.type() == product)
-                .map(EntitlementEntity::endsAt)
-                .max(Instant::compareTo)
-                .filter(end -> end.isAfter(now))
-                .orElse(now);
+        // Another pass of the same kind starts when the last one bought before it ends, instead of overlapping it,
+        // even if that one hasn't started yet (a third pass goes after the second, not on top of it).
+        entitlements.lockHost(userId);
+        Instant start = entitlements.findLastEnd(userId, product, now).orElse(now);
         EntitlementEntity pass =
                 entitlements.insert(userId, recorded.get().id(), product, start, start.plus(product.validity()), now);
         Map<String, Object> props = new LinkedHashMap<>();
