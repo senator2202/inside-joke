@@ -1,0 +1,15 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="UastIncorrectHttpHeaderInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="customHeaders">
+        <set>
+          <option value="anthropic-version" />
+          <option value="Paddle-Signature" />
+          <option value="x-api-key" />
+          <option value="X-XSRF-TOKEN" />
+        </set>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

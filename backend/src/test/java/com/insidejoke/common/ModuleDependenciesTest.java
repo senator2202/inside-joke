@@ -2,6 +2,7 @@ package com.insidejoke.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.insidejoke.InsideJokeApplication;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,7 +24,8 @@ import org.junit.jupiter.api.Test;
  */
 class ModuleDependenciesTest {
 
-    private static final Path SOURCES = Path.of("src", "main", "java", "com", "insidejoke");
+    private static final Path SOURCES = Path.of(
+            "src", "main", "java", InsideJokeApplication.class.getPackageName().replace('.', '/'));
     private static final Pattern IMPORT = Pattern.compile("(?m)^import com\\.insidejoke\\.(\\w+)\\.");
 
     static Map<String, TreeSet<String>> graph() throws IOException {
@@ -77,7 +79,7 @@ class ModuleDependenciesTest {
                 return cycle;
             }
         }
-        path.remove(path.size() - 1);
+        path.removeLast();
         state.put(module, 2);
         return null;
     }

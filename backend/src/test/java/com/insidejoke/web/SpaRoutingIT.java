@@ -41,6 +41,7 @@ class SpaRoutingIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("SpellCheckingInspection") // the standard header value
     void securityHeadersArePresent() throws Exception {
         mvc.perform(get("/api/auth/config"))
                 .andExpect(header().string("Content-Security-Policy", Matchers.containsString("default-src 'self'")))
@@ -50,7 +51,7 @@ class SpaRoutingIT extends AbstractIntegrationTest {
 
     @Test
     void theAppShellIsNeverCachedButHashedAssetsAre() throws Exception {
-        // After a deploy browsers must fetch the new index.html, or they would ask for asset names that no longer
+        // After a deployment browsers must fetch the new index.html, or they would ask for asset names that no longer
         // exist.
         mvc.perform(get("/index.html"))
                 .andExpect(header().string("Cache-Control", Matchers.containsString("no-cache")));

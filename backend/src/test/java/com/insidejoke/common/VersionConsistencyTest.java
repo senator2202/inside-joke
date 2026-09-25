@@ -39,7 +39,7 @@ class VersionConsistencyTest {
                 read("frontend/package.json"),
                 "version in package.json");
         String changelog = first(
-                Pattern.compile("(?m)^## \\[(\\d[^\\]]*)\\] — \\d{4}-\\d{2}-\\d{2}$"),
+                Pattern.compile("(?m)^## \\[(\\d[^]]*)] — \\d{4}-\\d{2}-\\d{2}$"),
                 read("CHANGELOG.md"),
                 "a released version in CHANGELOG.md");
 
@@ -65,7 +65,7 @@ class VersionConsistencyTest {
         assertThat(changelog.indexOf("## [Unreleased]"))
                 .as("Unreleased comes first")
                 .isLessThan(changelog.indexOf(
-                        "## [" + first(Pattern.compile("(?m)^## \\[(\\d[^\\]]*)\\]"), changelog, "release") + "]"));
+                        "## [" + first(Pattern.compile("(?m)^## \\[(\\d[^]]*)]"), changelog, "release") + "]"));
         Matcher headings = Pattern.compile("(?m)^### (.+)$").matcher(changelog);
         while (headings.find()) {
             assertThat(headings.group(1))

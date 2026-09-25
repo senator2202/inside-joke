@@ -10,7 +10,37 @@ import tools.jackson.databind.json.JsonMapper;
 /** A signed-in host with a room, the owner's shared screen and a number of player phones, all over real HTTP and WebSockets. */
 public final class Party implements AutoCloseable {
 
-    public record Phone(String id, String name, String token, GameSocket socket) {}
+    /** A player's phone: the player's id, name and room token, and the socket the party opened and will close. */
+    public static final class Phone {
+        private final String id;
+        private final String name;
+        private final String token;
+        private final GameSocket socket;
+
+        Phone(String id, String name, String token, GameSocket socket) {
+            this.id = id;
+            this.name = name;
+            this.token = token;
+            this.socket = socket;
+        }
+
+        public String id() {
+            return id;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        public String token() {
+            return token;
+        }
+
+        /** The phone's connection; {@link Party#close()} closes it. */
+        public GameSocket getSocket() {
+            return socket;
+        }
+    }
 
     public final ApiClient host;
     public final UUID hostId;
@@ -69,7 +99,7 @@ public final class Party implements AutoCloseable {
         return create(port, json, fake, Map.of("tone", "CHEEKY", "length", "SHORT", "mode", "STANDARD"), players);
     }
 
-    public Phone join(String name) {
+    public void join(String name) {
         ApiClient guest = new ApiClient(port, json);
         ApiClient.Resp joined = guest.post("/api/rooms/" + code + "/players", Map.of("name", name, "emoji", "🦊"));
         expect(joined, 201);
@@ -77,7 +107,6 @@ public final class Party implements AutoCloseable {
         Phone phone = new Phone(
                 joined.json().path("playerId").asString(), name, token, GameSocket.connect(port, json, token));
         phones.add(phone);
-        return phone;
     }
 
     public Phone phone(String id) {
@@ -106,7 +135,7 @@ public final class Party implements AutoCloseable {
     public void completeIntake() {
         screen.phase("INTAKE");
         for (Phone p : phones) {
-            p.socket()
+            p.getSocket()
                     .ok(
                             "intake.submit",
                             Map.of("answers", List.of("I eat cereal with orange juice", "Karaoke", "Lost my shoe")));
@@ -125,6 +154,6 @@ public final class Party implements AutoCloseable {
     @Override
     public void close() {
         screen.abort();
-        phones.forEach(p -> p.socket().abort());
+        phones.forEach(p -> p.getSocket().abort());
     }
 }

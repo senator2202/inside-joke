@@ -15,28 +15,32 @@ class PaddleSignatureUtilsTest {
 
     @Test
     void matchesAnIndependentlyComputedHmac() {
-        // python3: hmac.new(b"whsec_known", b'1790000000:{"event_id":"evt_1"}', hashlib.sha256).hexdigest()
-        String expected = "39b446a7192270aa89b201f50536f245808ed592141eff0c9662844277c2d111";
+        // python3: hmac.new(b"known-secret", b'1790000000:{"event_id":"evt_1"}', hashlib.sha256).hexdigest()
+        String expected = "070c3edf92e076d05aaa36055923e9e0fabbae20b1dd92bf4422756f7bd8ac92";
         Instant at = Instant.ofEpochSecond(1_790_000_000L);
-        assertThat(PaddleSignatureUtils.sign(BODY, "whsec_known", at)).isEqualTo("ts=1790000000;h1=" + expected);
-        assertThat(PaddleSignatureUtils.valid("ts=1790000000;h1=" + expected, BODY, "whsec_known", at, TOLERANCE))
+        assertThat(PaddleSignatureUtils.sign(BODY, "known-secret", at)).isEqualTo("ts=1790000000;h1=" + expected);
+        assertThat(PaddleSignatureUtils.valid("ts=1790000000;h1=" + expected, BODY, "known-secret", at, TOLERANCE))
                 .isTrue();
     }
 
     @Test
     void acceptsItsOwnSignatureAndRejectsTampering() {
-        String header = PaddleSignatureUtils.sign(BODY, "s3cret", NOW);
-        assertThat(PaddleSignatureUtils.valid(header, BODY, "s3cret", NOW, TOLERANCE))
+        String header = PaddleSignatureUtils.sign(BODY, "test-secret", NOW);
+        assertThat(PaddleSignatureUtils.valid(header, BODY, "test-secret", NOW, TOLERANCE))
                 .isTrue();
         assertThat(PaddleSignatureUtils.valid(
-                        header, "{\"event_id\":\"evt_2\"}".getBytes(StandardCharsets.UTF_8), "s3cret", NOW, TOLERANCE))
+                        header,
+                        "{\"event_id\":\"evt_2\"}".getBytes(StandardCharsets.UTF_8),
+                        "test-secret",
+                        NOW,
+                        TOLERANCE))
                 .isFalse();
         assertThat(PaddleSignatureUtils.valid(header, BODY, "other", NOW, TOLERANCE))
                 .isFalse();
         assertThat(PaddleSignatureUtils.valid(
                         header.toUpperCase().replace("TS=", "ts=").replace("H1=", "h1="),
                         BODY,
-                        "s3cret",
+                        "test-secret",
                         NOW,
                         TOLERANCE))
                 .as("hex case does not matter")
@@ -45,14 +49,14 @@ class PaddleSignatureUtilsTest {
 
     @Test
     void rejectsOldOrMalformedHeaders() {
-        String old = PaddleSignatureUtils.sign(BODY, "s3cret", NOW.minus(Duration.ofMinutes(6)));
-        assertThat(PaddleSignatureUtils.valid(old, BODY, "s3cret", NOW, TOLERANCE))
+        String old = PaddleSignatureUtils.sign(BODY, "test-secret", NOW.minus(Duration.ofMinutes(6)));
+        assertThat(PaddleSignatureUtils.valid(old, BODY, "test-secret", NOW, TOLERANCE))
                 .isFalse();
-        assertThat(PaddleSignatureUtils.valid(null, BODY, "s3cret", NOW, TOLERANCE))
+        assertThat(PaddleSignatureUtils.valid(null, BODY, "test-secret", NOW, TOLERANCE))
                 .isFalse();
-        assertThat(PaddleSignatureUtils.valid("h1=abc", BODY, "s3cret", NOW, TOLERANCE))
+        assertThat(PaddleSignatureUtils.valid("h1=abc", BODY, "test-secret", NOW, TOLERANCE))
                 .isFalse();
-        assertThat(PaddleSignatureUtils.valid("ts=abc;h1=abc", BODY, "s3cret", NOW, TOLERANCE))
+        assertThat(PaddleSignatureUtils.valid("ts=abc;h1=abc", BODY, "test-secret", NOW, TOLERANCE))
                 .isFalse();
         String anyHeader = "ts=" + NOW.getEpochSecond() + ";h1=" + "a".repeat(64);
         assertThat(PaddleSignatureUtils.valid(anyHeader, BODY, "", NOW, TOLERANCE))

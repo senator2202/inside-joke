@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/** JDBC conversions for PostgreSQL timestamptz and uuid columns. */
+/** JDBC conversions for PostgreSQL {@code timestamp with time zone} and uuid columns. */
 public final class DbUtils {
 
     private DbUtils() {}

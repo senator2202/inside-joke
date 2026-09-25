@@ -41,10 +41,10 @@ class LanguageIT extends AbstractIntegrationTest {
             assertThat(lobby.path("settings").path("language").asString()).isEqualTo("ru");
             assertThat(lobby.path("host").path("text").asString()).containsPattern(CYRILLIC);
 
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             JsonNode intake = party.phones
-                    .get(0)
-                    .socket()
+                    .getFirst()
+                    .getSocket()
                     .state(s -> "INTAKE".equals(s.path("phase").asString()));
             intake.path("intake")
                     .path("questions")
@@ -71,13 +71,13 @@ class LanguageIT extends AbstractIntegrationTest {
     void whenTheAiIsDownTheFallbackContentIsRussianToo() {
         FakeAi.install(FAKE, FakeAi.Mode.ERROR);
         try (Party party = Party.create(port, json, FAKE, russian(), 3)) {
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             party.screen.phase("INTAKE");
             party.screen.ok("game.next", Map.of());
             party.screen.phase("ANSWERING");
             JsonNode phone = party.phones
-                    .get(0)
-                    .socket()
+                    .getFirst()
+                    .getSocket()
                     .state(s -> s.path("you").path("assignments").size() == 2);
             phone.path("you")
                     .path("assignments")
@@ -99,10 +99,10 @@ class LanguageIT extends AbstractIntegrationTest {
                     s -> "ru".equals(s.path("settings").path("language").asString()));
             assertThat(party.screen.error("game.settings", Map.of("language", "de")))
                     .isEqualTo("VALIDATION_FAILED");
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             JsonNode intake = party.phones
                     .get(1)
-                    .socket()
+                    .getSocket()
                     .state(s -> "INTAKE".equals(s.path("phase").asString()));
             intake.path("intake")
                     .path("questions")

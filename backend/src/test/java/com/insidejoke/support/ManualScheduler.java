@@ -13,11 +13,13 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * A scheduler on a {@link ManualClock}: nothing runs by itself. {@link #runDue()} runs, earliest first, every task
  * whose time has come, on the calling thread. Unit tests of the game drive phase timers with it.
  */
+@NullMarked
 public final class ManualScheduler extends AbstractExecutorService implements ScheduledExecutorService {
 
     private final ManualClock clock;
@@ -53,7 +55,7 @@ public final class ManualScheduler extends AbstractExecutorService implements Sc
 
     @Override
     public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-        return add(Executors.callable(command, null), delay, unit);
+        return add(Executors.callable(command), delay, unit);
     }
 
     @Override

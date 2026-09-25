@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class RoomRegistryService {
 
     /** 20 consonants: no look-alike characters and no vowels, so codes never spell words. */
+    @SuppressWarnings("SpellCheckingInspection")
     public static final String ALPHABET = "BCDFGHJKLMNPQRSTVWXZ";
 
     private final ConcurrentHashMap<String, RoomState> rooms = new ConcurrentHashMap<>();

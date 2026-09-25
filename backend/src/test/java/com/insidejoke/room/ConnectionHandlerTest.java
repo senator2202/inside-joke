@@ -8,6 +8,8 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.insidejoke.support.Await;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -75,12 +77,9 @@ class ConnectionHandlerTest {
         for (int i = 0; i < 500; i++) {
             c.send("frame-" + i);
         }
-        long deadline = System.nanoTime() + 2_000_000_000L;
-        while (received.size() < 500 && System.nanoTime() < deadline) {
-            Thread.sleep(5);
-        }
+        Await.until("all frames sent", Duration.ofSeconds(2), () -> received.size() == 500);
         assertThat(received).hasSize(500);
-        assertThat(received.get(0)).isEqualTo("frame-0");
+        assertThat(received.getFirst()).isEqualTo("frame-0");
         assertThat(received.get(499)).isEqualTo("frame-499");
         assertThat(c.queuedChars()).isZero();
     }

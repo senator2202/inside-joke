@@ -113,8 +113,8 @@ public class AppSettingsService {
             throw invalid(key, "must be a whole number");
         }
         long n = value.longValue();
-        if (n < key.min() || n > key.max()) {
-            throw invalid(key, "must be between " + key.min() + " and " + key.max());
+        if (n < 0 || n > key.max()) {
+            throw invalid(key, "must be between 0 and " + key.max());
         }
         return n;
     }

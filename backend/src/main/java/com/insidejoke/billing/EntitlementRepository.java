@@ -8,11 +8,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class EntitlementRepository {
+
+    private static final RowMapper<EntitlementEntity> ROW_MAPPER = (rs, rowNum) -> map(rs);
 
     private static final String COLUMNS = "id, user_id, purchase_id, type, starts_at, ends_at, monthly_game_limit, "
             + "is_granted_by_admin, revoked_at, created_at, granted_by, revoked_by, revoke_reason";
@@ -55,7 +58,7 @@ public class EntitlementRepository {
                 .param(purchaseId == null)
                 .param(grantedBy)
                 .param(DbUtils.ts(now))
-                .query(EntitlementRepository::map)
+                .query(ROW_MAPPER)
                 .single();
     }
 
@@ -64,14 +67,14 @@ public class EntitlementRepository {
         return jdbc.sql("SELECT " + COLUMNS + " FROM entitlement WHERE user_id = ? AND revoked_at IS NULL "
                         + "AND starts_at <= ? AND ends_at > ? ORDER BY ends_at DESC")
                 .params(userId, DbUtils.ts(now), DbUtils.ts(now))
-                .query(EntitlementRepository::map)
+                .query(ROW_MAPPER)
                 .list();
     }
 
     public Optional<EntitlementEntity> findByPurchase(UUID purchaseId) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM entitlement WHERE purchase_id = ?")
                 .param(purchaseId)
-                .query(EntitlementRepository::map)
+                .query(ROW_MAPPER)
                 .optional();
     }
 
@@ -93,7 +96,7 @@ public class EntitlementRepository {
                 .update();
     }
 
-    static EntitlementEntity map(ResultSet rs, int row) throws SQLException {
+    static EntitlementEntity map(ResultSet rs) throws SQLException {
         String reason = rs.getString("revoke_reason");
         return new EntitlementEntity(
                 DbUtils.uuid(rs, "id"),

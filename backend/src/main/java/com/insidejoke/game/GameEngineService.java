@@ -2,7 +2,6 @@ package com.insidejoke.game;
 
 import com.insidejoke.analytics.AnalyticsService;
 import com.insidejoke.common.ApiException;
-import com.insidejoke.common.AppProperties;
 import com.insidejoke.common.ErrorCode;
 import com.insidejoke.common.TokenUtils;
 import com.insidejoke.game.dto.LiveStatsDto;
@@ -60,7 +59,6 @@ public class GameEngineService implements GameRuntimeService {
     private final RoomRegistryService registry;
     private final GameProperties props;
     private final AppSettingsService settings;
-    private final AppProperties app;
     private final Clock clock;
     private final ScheduledExecutorService scheduler;
     private final ExecutorService io;
@@ -84,7 +82,6 @@ public class GameEngineService implements GameRuntimeService {
             RoomRegistryService registry,
             GameProperties props,
             AppSettingsService settings,
-            AppProperties app,
             Clock clock,
             ScheduledExecutorService gameScheduler,
             ExecutorService ioExecutor,
@@ -99,7 +96,6 @@ public class GameEngineService implements GameRuntimeService {
         this.registry = registry;
         this.props = props;
         this.settings = settings;
-        this.app = app;
         this.clock = clock;
         this.scheduler = gameScheduler;
         this.io = ioExecutor;
@@ -204,11 +200,11 @@ public class GameEngineService implements GameRuntimeService {
                 .flatMap(room -> room.call(r -> {
                     Member m = r.getMembers().get(token);
                     if (m == null || r.getPhase() == Phase.CLOSED) {
-                        return Optional.<Resolved>empty();
+                        return Optional.empty();
                     }
                     if (m.kind() == MemberKind.PLAYER
                             && r.getPlayers().get(m.playerId()).isRemoved()) {
-                        return Optional.<Resolved>empty();
+                        return Optional.empty();
                     }
                     return Optional.of(new Resolved(room, m));
                 }));
@@ -241,7 +237,7 @@ public class GameEngineService implements GameRuntimeService {
                     ? rawEmoji
                     : EMOJIS.get(random.nextInt(EMOJIS.size()));
             String token = TokenUtils.random(18);
-            PlayerState p = new PlayerState(r.nextId("p"), token, name, emoji, clock.instant());
+            PlayerState p = new PlayerState(r.nextId("p"), name, emoji, clock.instant());
             p.setDisconnectedAt(clock.instant());
             r.putPlayer(p.getId(), p);
             r.putMember(token, new Member(token, MemberKind.PLAYER, p.getId(), null));
@@ -335,7 +331,7 @@ public class GameEngineService implements GameRuntimeService {
                 }
                 case AUDIENCE -> r.setAudienceCount(Math.max(0, r.getAudienceCount() - 1));
                 case SCREEN -> {
-                    return;
+                    // A screen copy's coming and going changes nothing.
                 }
             }
         });
@@ -547,10 +543,7 @@ public class GameEngineService implements GameRuntimeService {
         if (r.getPhase() == Phase.CLOSED) {
             return Long.MAX_VALUE;
         }
-        long next = Long.MAX_VALUE;
-        if (r.getDeadlineMs() != null && r.getPause() == null) {
-            next = Math.min(next, r.getDeadlineMs());
-        }
+        long next = r.getDeadlineMs() != null && r.getPause() == null ? r.getDeadlineMs() : Long.MAX_VALUE;
         if (r.getThinkingUntilMs() != null) {
             next = Math.min(next, r.getThinkingUntilMs());
         }
@@ -812,7 +805,7 @@ public class GameEngineService implements GameRuntimeService {
                         r.getPhase() == Phase.FINALE && reason == EndReason.COMPLETED
                                 ? r.getRoundNumber()
                                 : r.getRoundNumber() - 1),
-                (int) r.getDossier().stream().count(),
+                r.getDossier().size(),
                 reason,
                 clock.instant());
         background(() -> sessions.finish(id, finish));

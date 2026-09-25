@@ -1,4 +1,4 @@
-# Local development: docker compose postgres, Vite dev server on :5173, emails written to the log.
+# Local development: Docker Compose runs Postgres, Vite dev server on :5173, emails written to the log.
 server:
   servlet:
     session:

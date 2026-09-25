@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -68,7 +69,7 @@ final class VotingPhaseHandler {
 
     boolean allAnswered(RoomState r) {
         Set<String> present = new HashSet<>(
-                runtime.presentPlayers(r).stream().map(p -> p.getId()).toList());
+                runtime.presentPlayers(r).stream().map(PlayerState::getId).toList());
         for (DuelState d : r.getRound().getDuels()) {
             if (present.contains(d.getPlayerA()) && d.getAnswerA() == null
                     || present.contains(d.getPlayerB()) && d.getAnswerB() == null) {
@@ -139,7 +140,7 @@ final class VotingPhaseHandler {
             }
             if (d.usableA() && d.usableB()) {
                 Set<String> eligible = new HashSet<>(runtime.presentPlayers(r).stream()
-                        .map(p -> p.getId())
+                        .map(PlayerState::getId)
                         .filter(id -> !d.involves(id))
                         .toList());
                 d.setVote(new VoteStepState(List.of("A", "B"), eligible));
@@ -182,7 +183,7 @@ final class VotingPhaseHandler {
 
     boolean votingComplete(RoomState r, VoteStepState step) {
         Set<String> present = new HashSet<>(
-                runtime.presentPlayers(r).stream().map(p -> p.getId()).toList());
+                runtime.presentPlayers(r).stream().map(PlayerState::getId).toList());
         return step.getEligible().stream().filter(present::contains).allMatch(step.getVotes()::containsKey);
     }
 
@@ -197,7 +198,7 @@ final class VotingPhaseHandler {
             throw new ApiException(ErrorCode.VALIDATION_FAILED, "Unknown option.");
         }
         if (step.addAudienceVoter(audienceId)) {
-            step.mergeAudience(optionId, 1, Integer::sum);
+            step.addAudienceVote(optionId);
         }
     }
     // ------------------------------------------------------------------ reveal and scoring
@@ -208,7 +209,7 @@ final class VotingPhaseHandler {
         r.setDeadlineMs(runtime.now() + props.reveal().toMillis());
         round.setPoints(new HashMap<>());
         switch (round.getKind()) {
-            case ANSWER_DUEL -> revealDuel(r, round.currentDuel());
+            case ANSWER_DUEL -> revealDuel(r, Objects.requireNonNull(round.currentDuel(), "a duel is being voted on"));
             case WHO_OF_US -> revealWho(r, round);
             case TRUTH_OR_AI -> revealTruth(r, round);
         }
@@ -238,7 +239,7 @@ final class VotingPhaseHandler {
         PlayerState p = r.getPlayers().get(playerId);
         if (p != null && points != 0) {
             p.addScore(points);
-            r.getRound().mergePoint(playerId, points, Integer::sum);
+            r.getRound().addPoints(playerId, points);
         }
     }
 

@@ -289,7 +289,6 @@ public class RoomProjectionService {
             case ANSWER_DUEL -> duelRound(r, c);
             case WHO_OF_US -> whoOfUsRound(r, c);
             case TRUTH_OR_AI -> truthOrAiRound(r, c);
-            default -> null;
         };
     }
 
@@ -426,90 +425,76 @@ public class RoomProjectionService {
 
     /** Who of us: one question, a vote for a player. */
     private RoundDto whoOfUsRound(RoomState r, VoteContext c) {
-        RoundState round = c.round();
-        boolean reveal = c.reveal();
-        VoteStepState step = c.step();
-        List<String> voters = c.voters();
-        Integer eligible = c.eligible();
-        Integer audienceTotal = c.audienceTotal();
-        Map<String, Integer> points = c.points();
         List<OptionDto> options = new ArrayList<>();
         Map<String, Integer> counts = new LinkedHashMap<>();
-        step.getVotes().values().forEach(id -> counts.merge(id, 1, Integer::sum));
+        c.step().getVotes().values().forEach(id -> counts.merge(id, 1, Integer::sum));
         int best = counts.values().stream().max(Integer::compare).orElse(0);
-        for (String id : step.getOptions()) {
+        for (String id : c.step().getOptions()) {
             PlayerState p = r.getPlayers().get(id);
             options.add(new OptionDto(
                     id,
                     p.getName(),
                     id,
-                    reveal ? counts.getOrDefault(id, 0) : null,
-                    audienceTotal != null ? step.getAudience().getOrDefault(id, 0) : null,
+                    c.reveal() ? counts.getOrDefault(id, 0) : null,
+                    c.audienceTotal() != null ? c.step().getAudience().getOrDefault(id, 0) : null,
                     null,
                     null,
-                    reveal ? best > 0 && counts.getOrDefault(id, 0) == best : null,
+                    c.reveal() ? best > 0 && counts.getOrDefault(id, 0) == best : null,
                     null));
         }
         return new RoundDto(
-                round.getNumber(),
+                c.round().getNumber(),
                 r.getRoundsTotal(),
-                round.getKind(),
+                c.round().getKind(),
                 null,
                 null,
                 null,
-                round.getQuestion(),
+                c.round().getQuestion(),
                 null,
                 null,
                 options,
-                voters,
-                eligible,
+                c.voters(),
+                c.eligible(),
                 null,
-                reveal ? Boolean.TRUE : null,
-                points,
-                audienceTotal,
+                c.reveal() ? Boolean.TRUE : null,
+                c.points(),
+                c.audienceTotal(),
                 null);
     }
 
     /** Truth or AI: a statement about one player, a vote for truth or fake. */
     private RoundDto truthOrAiRound(RoomState r, VoteContext c) {
-        RoundState round = c.round();
-        boolean reveal = c.reveal();
-        VoteStepState step = c.step();
-        List<String> voters = c.voters();
-        Integer eligible = c.eligible();
-        Integer audienceTotal = c.audienceTotal();
-        Map<String, Integer> points = c.points();
-        String correct = round.isStatementTrue() ? "truth" : "ai";
+        String correct = c.round().isStatementTrue() ? "truth" : "ai";
         List<OptionDto> options = new ArrayList<>();
         for (String id : List.of("truth", "ai")) {
             options.add(new OptionDto(
                     id,
                     id.equals("truth") ? "Truth" : "AI invention",
                     null,
-                    reveal ? step.countFor(id) : null,
-                    audienceTotal != null ? step.getAudience().getOrDefault(id, 0) : null,
+                    c.reveal() ? c.step().countFor(id) : null,
+                    c.audienceTotal() != null ? c.step().getAudience().getOrDefault(id, 0) : null,
                     null,
                     null,
                     null,
-                    reveal ? id.equals(correct) : null));
+                    c.reveal() ? id.equals(correct) : null));
         }
         return new RoundDto(
-                round.getNumber(),
+                c.round().getNumber(),
                 r.getRoundsTotal(),
-                round.getKind(),
+                c.round().getKind(),
                 null,
                 null,
                 null,
                 null,
-                round.getStatement(),
-                round.getSubjectId(),
+                c.round().getStatement(),
+                c.round().getSubjectId(),
                 options,
-                voters,
-                eligible,
+                c.voters(),
+                c.eligible(),
                 null,
-                reveal ? Boolean.TRUE : null,
-                points,
-                audienceTotal,
+                c.reveal() ? Boolean.TRUE : null,
+                c.points(),
+                c.audienceTotal(),
                 null);
     }
 

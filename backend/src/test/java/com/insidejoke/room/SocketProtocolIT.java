@@ -26,42 +26,48 @@ class SocketProtocolIT extends AbstractIntegrationTest {
 
     @Test
     void helloMustComeFirst() {
-        GameSocket s = new GameSocket(port, json);
-        assertThat(s.error("intake.submit", Map.of())).isEqualTo("BAD_MESSAGE");
-        Await.until("closed", () -> Integer.valueOf(4401).equals(s.closeCode()));
+        try (GameSocket s = new GameSocket(port, json)) {
+            assertThat(s.error("intake.submit", Map.of())).isEqualTo("BAD_MESSAGE");
+            Await.until("closed", () -> Integer.valueOf(4401).equals(s.closeCode()));
+        }
     }
 
     @Test
     void silentConnectionsAreDroppedAfterFiveSeconds() {
-        GameSocket s = new GameSocket(port, json);
-        Await.until("closed", Duration.ofSeconds(8), () -> Integer.valueOf(4401).equals(s.closeCode()));
+        try (GameSocket s = new GameSocket(port, json)) {
+            Await.until(
+                    "closed", Duration.ofSeconds(8), () -> Integer.valueOf(4401).equals(s.closeCode()));
+        }
     }
 
     @Test
     void unknownTokensAreRefused() {
-        GameSocket s = new GameSocket(port, json);
-        assertThat(s.error("hello", Map.of("token", "nope"))).isEqualTo("ROOM_NOT_FOUND");
-        Await.until("closed", () -> Integer.valueOf(4404).equals(s.closeCode()));
+        try (GameSocket s = new GameSocket(port, json)) {
+            assertThat(s.error("hello", Map.of("token", "nope"))).isEqualTo("ROOM_NOT_FOUND");
+            Await.until("closed", () -> Integer.valueOf(4404).equals(s.closeCode()));
+        }
     }
 
     @Test
     void pingPongWorksBeforeAndAfterHello() {
-        GameSocket s = new GameSocket(port, json);
-        assertThat(s.reply(s.send("ping", Map.of())).path("type").asString()).isEqualTo("pong");
-        s.abort();
+        try (GameSocket s = new GameSocket(port, json)) {
+            assertThat(s.reply(s.send("ping", Map.of())).path("type").asString())
+                    .isEqualTo("pong");
+        }
     }
 
     @Test
     void malformedAndOversizedMessagesGetErrorsButKeepTheConnection() {
         try (Party party = Party.create(port, json, FAKE, 1)) {
-            GameSocket phone = party.phones.get(0).socket();
+            GameSocket phone = party.phones.getFirst().getSocket();
             phone.sendRaw("not json");
             phone.sendRaw("{\"v\":2,\"type\":\"ping\",\"reqId\":\"x-1\"}");
             assertThat(phone.reply("x-1").path("data").path("code").asString()).isEqualTo("BAD_MESSAGE");
             assertThat(phone.error("dance", Map.of())).isEqualTo("BAD_MESSAGE");
             assertThat(phone.error("dossier.add", Map.of("text", "y".repeat(5000))))
                     .isEqualTo("BAD_MESSAGE");
-            assertThat(phone.error("hello", Map.of("token", party.phones.get(0).token())))
+            assertThat(phone.error(
+                            "hello", Map.of("token", party.phones.getFirst().token())))
                     .isEqualTo("BAD_MESSAGE");
             assertThat(phone.reply(phone.send("ping", Map.of())).path("type").asString())
                     .isEqualTo("pong");
@@ -71,7 +77,7 @@ class SocketProtocolIT extends AbstractIntegrationTest {
     @Test
     void moreThanTenMessagesPerSecondAreRateLimited() {
         try (Party party = Party.create(port, json, FAKE, 1)) {
-            GameSocket phone = party.phones.get(0).socket();
+            GameSocket phone = party.phones.getFirst().getSocket();
             for (int i = 0; i < 15; i++) {
                 phone.send("ping", Map.of());
             }
@@ -86,7 +92,7 @@ class SocketProtocolIT extends AbstractIntegrationTest {
 
     @Test
     void foreignOriginsCannotConnect() {
-        Throwable thrown = catchThrowable(() -> new GameSocket(port, json, "https://evil.example"));
+        Throwable thrown = catchThrowable(() -> GameSocket.checkHandshake(port, json, "https://evil.example"));
         while (thrown != null && !(thrown instanceof WebSocketHandshakeException)) {
             thrown = thrown.getCause();
         }
@@ -99,15 +105,15 @@ class SocketProtocolIT extends AbstractIntegrationTest {
     void reconnectingWithTheSameTokenRestoresTheSeat() {
         try (Party party = Party.create(port, json, FAKE, 3)) {
             Party.Phone p = party.phones.get(1);
-            p.socket().abort();
+            p.getSocket().abort();
             party.screen.state(s -> s.path("players").size() > 1
-                    && !s.path("players").get(1).path("connected").asBoolean());
+                    && !s.path("players").path(1).path("connected").asBoolean());
             try (GameSocket again = GameSocket.connect(port, json, p.token())) {
                 JsonNode state = again.latest();
                 assertThat(state.path("you").path("playerId").asString()).isEqualTo(p.id());
                 assertThat(state.path("you").path("name").asString()).isEqualTo(p.name());
                 party.screen.state(s -> s.path("players").size() > 1
-                        && s.path("players").get(1).path("connected").asBoolean());
+                        && s.path("players").path(1).path("connected").asBoolean());
             }
         }
     }
@@ -118,14 +124,15 @@ class SocketProtocolIT extends AbstractIntegrationTest {
         try (Party party = Party.create(port, json, FAKE, 4)) {
             Party.Phone victim = party.phones.get(3);
             party.screen.ok("player.kick", Map.of("playerId", victim.id()));
-            Await.until("kick notice", () -> victim.socket().received("kicked"));
+            Await.until("kick notice", () -> victim.getSocket().received("kicked"));
             Await.until(
                     "socket closed",
-                    () -> Integer.valueOf(4403).equals(victim.socket().closeCode()));
+                    () -> Integer.valueOf(4403).equals(victim.getSocket().closeCode()));
             assertThat(party.screen.state(s -> s.path("players").size() == 3)).isNotNull();
-            GameSocket again = new GameSocket(port, json);
-            assertThat(again.error("hello", Map.of("token", victim.token()))).isEqualTo("ROOM_NOT_FOUND");
-            again.abort();
+            try (GameSocket again = new GameSocket(port, json)) {
+                assertThat(again.error("hello", Map.of("token", victim.token())))
+                        .isEqualTo("ROOM_NOT_FOUND");
+            }
         }
     }
 
@@ -134,13 +141,14 @@ class SocketProtocolIT extends AbstractIntegrationTest {
     void aClosedRoomSaysGoodbyeToEveryConnection() {
         try (Party party = Party.create(port, json, FAKE, 3)) {
             party.screen.ok("room.close", Map.of());
-            Await.until("phones told", () -> party.phones.get(1).socket().received("closed"));
+            Await.until("phones told", () -> party.phones.get(1).getSocket().received("closed"));
             Await.until("screen told", () -> party.screen.received("closed"));
             assertThat(party.screen.latest().path("phase").asString()).isEqualTo("CLOSED");
-            GameSocket late = new GameSocket(port, json);
-            assertThat(late.error("hello", Map.of("token", party.phones.get(0).token())))
-                    .isEqualTo("ROOM_NOT_FOUND");
-            late.abort();
+            try (GameSocket late = new GameSocket(port, json)) {
+                assertThat(late.error(
+                                "hello", Map.of("token", party.phones.getFirst().token())))
+                        .isEqualTo("ROOM_NOT_FOUND");
+            }
         }
     }
 
@@ -149,11 +157,11 @@ class SocketProtocolIT extends AbstractIntegrationTest {
     void aRequestReSentAfterAReconnectIsAnsweredButAppliedOnce() {
         FakeAi.install(FAKE, FakeAi.Mode.OK, 1500);
         try (Party party = Party.create(port, json, FAKE, 3)) {
-            Party.Phone p = party.phones.get(0);
+            Party.Phone p = party.phones.getFirst();
             Map<String, Object> secret = Map.of("text", "Sleeps with a night light on");
-            p.socket().send("dossier.add", secret, "resent-1");
-            Await.until("the secret is being checked", () -> checksOf("night light") == 1);
-            p.socket().abort();
+            p.getSocket().send("dossier.add", secret, "resent-1");
+            Await.until("the secret is being checked", () -> checksOfTheSecret() == 1);
+            p.getSocket().abort();
 
             try (GameSocket again = GameSocket.connect(port, json, p.token())) {
                 JsonNode reply = again.reply(again.send("dossier.add", secret, "resent-1"));
@@ -173,14 +181,15 @@ class SocketProtocolIT extends AbstractIntegrationTest {
             }
 
             assertThat(party.screen.state(s -> s.path("secrets").asInt() == 1)).isNotNull();
-            assertThat(checksOf("night light")).as("checked by the model once").isEqualTo(1);
+            assertThat(checksOfTheSecret()).as("checked by the model once").isEqualTo(1);
             assertThat(party.screen.latest().path("secrets").asInt()).isEqualTo(1);
         }
     }
 
-    private static long checksOf(String text) {
+    /** How many times the model was asked to check the night-light secret. */
+    private static long checksOfTheSecret() {
         return FAKE.requests("POST", "/anthropic/v1/messages").stream()
-                .filter(r -> r.body().contains(text))
+                .filter(r -> r.body().contains("night light"))
                 .count();
     }
 
@@ -189,14 +198,14 @@ class SocketProtocolIT extends AbstractIntegrationTest {
     void stateFramesNeverCarryNulls() {
         FakeAi.install(FAKE);
         try (Party party = Party.create(port, json, FAKE, 3)) {
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             party.screen.phase("INTAKE");
             party.completeIntake();
             party.screen.phase("ANSWERING");
             for (GameSocket socket : List.of(
                     party.screen,
-                    party.phones.get(0).socket(),
-                    party.phones.get(1).socket())) {
+                    party.phones.getFirst().getSocket(),
+                    party.phones.get(1).getSocket())) {
                 for (JsonNode state : socket.states()) {
                     assertThat(nullPaths(state, "$"))
                             .as("null fields in a state frame")

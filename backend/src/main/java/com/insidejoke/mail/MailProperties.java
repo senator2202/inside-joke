@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Transactional email settings.
  *
- * @param provider "resend" sends through the Resend HTTP API; "smtp" through any SMTP server (Gmail, Yandex, your own);
+ * @param provider "resend" sends through the Resend HTTP API; "SMTP" through any SMTP server (Gmail, Yandex, your own);
  *                 "log" writes the message to the log (local development only)
  * @param from     sender as {@code Name <address>}; with Gmail it must be the account's own address or a verified alias
  */
@@ -62,7 +62,7 @@ public record MailProperties(String provider, String from, Resend resend, Smtp s
                 ? "resend"
                 : provider.trim().toLowerCase(Locale.ROOT);
         if (!PROVIDERS.contains(provider)) {
-            throw new IllegalArgumentException("MAIL_PROVIDER must be log, resend or smtp, not '" + provider + "'");
+            throw new IllegalArgumentException("MAIL_PROVIDER must be log, resend or SMTP, not '" + provider + "'");
         }
         from = from == null ? "Inside Joke <login@insidejoke.app>" : from;
         resend = resend == null ? new Resend("https://api.resend.com", "") : resend;

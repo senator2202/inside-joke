@@ -25,41 +25,18 @@ class GameFlowIT extends AbstractIntegrationTest {
     void fullShortGameWithAiHost() {
         FakeAi.install(FAKE);
         try (Party party = Party.create(port, json, FAKE, 3)) {
-            Party.Phone first = party.phones.get(0);
+            Party.Phone first = party.phones.getFirst();
             Party.Phone second = party.phones.get(1);
-            second.socket().ok("dossier.add", Map.of("aboutPlayerId", first.id(), "text", SECRET));
+            second.getSocket().ok("dossier.add", Map.of("aboutPlayerId", first.id(), "text", SECRET));
             assertThat(party.screen
                             .state(s -> s.path("secrets").asInt() == 1)
                             .path("secrets")
                             .asInt())
                     .isEqualTo(1);
 
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             Driver driver = new Driver(party, List.of("WHO_OF_US", "TRUTH_OR_AI", "ANSWER_DUEL", "WHO_OF_US"));
-            driver.onStep(s -> {
-                JsonNode round = s.path("round");
-                if ("ANSWERING".equals(s.path("phase").asString())) {
-                    assertThat(round.path("prompt").isMissingNode())
-                            .as("prompts stay off the shared screen")
-                            .isTrue();
-                    assertThat(s.path("you").path("assignments").isMissingNode())
-                            .isTrue();
-                }
-                if ("VOTING".equals(s.path("phase").asString())
-                        && "ANSWER_DUEL".equals(round.path("kind").asString())) {
-                    round.path("options")
-                            .forEach(o -> assertThat(o.path("authorId").isMissingNode())
-                                    .as("authors hidden")
-                                    .isTrue());
-                }
-                if ("REVEAL".equals(s.path("phase").asString())
-                        && "ANSWER_DUEL".equals(round.path("kind").asString())) {
-                    round.path("options")
-                            .forEach(o -> assertThat(o.path("authorId").isString())
-                                    .as("authors revealed")
-                                    .isTrue());
-                }
-            });
+            driver.onStep(GameFlowIT::screenKeepsTheSecretsOfTheStep);
             JsonNode finale = driver.playToFinale();
 
             List<String> kinds = driver.steps().stream()
@@ -81,7 +58,7 @@ class GameFlowIT extends AbstractIntegrationTest {
             assertThat(finale.path("finale").path("winnerIds").size()).isPositive();
             assertThat(finale.path("finale").path("standings").size()).isEqualTo(3);
             assertThat(finale.path("finale").path("answerOfNight").asString()).contains("says:");
-            assertThat(first.socket()
+            assertThat(first.getSocket()
                             .state(s -> "FINALE".equals(s.path("phase").asString()))
                             .path("you")
                             .path("title")
@@ -89,7 +66,7 @@ class GameFlowIT extends AbstractIntegrationTest {
                     .isEqualTo("AI title for Player1");
 
             for (Party.Phone p : party.phones) {
-                assertThat(String.join("\n", p.socket().rawFrames()))
+                assertThat(String.join("\n", p.getSocket().rawFrames()))
                         .as("the dossier never reaches clients")
                         .doesNotContain("SECRET-XYZZY");
             }
@@ -145,15 +122,15 @@ class GameFlowIT extends AbstractIntegrationTest {
     void aiOutageUsesFallbackContentAndTheGameGoesOn() {
         FakeAi.install(FAKE, FakeAi.Mode.ERROR);
         try (Party party = Party.create(port, json, FAKE, 3)) {
-            Party.Phone first = party.phones.get(0);
-            assertThat(first.socket().error("dossier.add", Map.of("text", "I once fell asleep at a concert")))
+            Party.Phone first = party.phones.getFirst();
+            assertThat(first.getSocket().error("dossier.add", Map.of("text", "I once fell asleep at a concert")))
                     .as("moderation fails closed")
                     .isEqualTo("MODERATION_UNAVAILABLE");
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             party.screen.phase("INTAKE");
-            assertThat(first.socket().error("intake.submit", Map.of("answers", List.of("a", "b", "c"))))
+            assertThat(first.getSocket().error("intake.submit", Map.of("answers", List.of("a", "b", "c"))))
                     .isEqualTo("MODERATION_UNAVAILABLE");
-            party.captain().socket().ok("game.next", Map.of());
+            party.captain().getSocket().ok("game.next", Map.of());
             party.screen.state(s -> !"INTAKE".equals(s.path("phase").asString()));
             JsonNode finale =
                     new Driver(party, List.of("TRUTH_OR_AI", "WHO_OF_US", "ANSWER_DUEL", "TRUTH_OR_AI")).playToFinale();
@@ -172,9 +149,9 @@ class GameFlowIT extends AbstractIntegrationTest {
     void invalidModelOutputIsRetriedOnceThenFallsBack() {
         FakeAi.install(FAKE, FakeAi.Mode.INVALID);
         try (Party party = Party.create(port, json, FAKE, 3)) {
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             party.screen.phase("INTAKE");
-            party.captain().socket().ok("game.next", Map.of());
+            party.captain().getSocket().ok("game.next", Map.of());
             JsonNode answering =
                     party.screen.state(s -> "ANSWERING".equals(s.path("phase").asString()));
             assertThat(answering.path("round").path("duelCount").asInt()).isEqualTo(3);
@@ -192,8 +169,8 @@ class GameFlowIT extends AbstractIntegrationTest {
                                     .single()
                             >= 2);
             for (Party.Phone p : party.phones) {
-                JsonNode st =
-                        p.socket().state(s -> s.path("you").path("assignments").size() == 2);
+                JsonNode st = p.getSocket()
+                        .state(s -> s.path("you").path("assignments").size() == 2);
                 st.path("you")
                         .path("assignments")
                         .forEach(a -> assertThat(a.path("prompt").asString()).doesNotStartWith("AI prompt"));
@@ -205,30 +182,38 @@ class GameFlowIT extends AbstractIntegrationTest {
     void playAgainKeepsPlayersAndSkipsTheIntake() {
         FakeAi.install(FAKE);
         try (Party party = Party.create(port, json, FAKE, 3)) {
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             new Driver(party, List.of("WHO_OF_US", "WHO_OF_US", "WHO_OF_US", "WHO_OF_US")).playToFinale();
-            party.captain().socket().ok("game.again", Map.of());
+            party.captain().getSocket().ok("game.again", Map.of());
             JsonNode lobby = party.screen.phase("LOBBY");
             assertThat(lobby.path("players").size()).isEqualTo(3);
             lobby.path("players")
                     .forEach(p -> assertThat(p.path("score").asInt()).isZero());
 
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             JsonNode denied = party.screen.state(s -> s.path("paywall").isString());
             assertThat(denied.path("paywall").asString()).isEqualTo("PAYWALL_FREE_LIMIT");
             assertThat(party.captain()
-                            .socket()
+                            .getSocket()
                             .state(s -> s.path("paywall").isString())
                             .path("paywall")
                             .asString())
                     .isEqualTo("PAYWALL_FREE_LIMIT");
-            assertThat(party.phones.get(0).socket().latest().path("paywall").isMissingNode()
-                            || party.phones.get(0).id().equals(party.captain().id()))
+            assertThat(party.phones
+                                    .getFirst()
+                                    .getSocket()
+                                    .latest()
+                                    .path("paywall")
+                                    .isMissingNode()
+                            || party.phones
+                                    .getFirst()
+                                    .id()
+                                    .equals(party.captain().id()))
                     .isTrue();
 
             data.pass(party.hostId, Product.PARTY_PASS);
             party.screen.ok("paywall.dismiss", Map.of());
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             JsonNode second = party.screen.phase("ANSWERING");
             assertThat(second.path("round").path("n").asInt()).isEqualTo(1);
             String previous = jdbc.sql(
@@ -244,7 +229,7 @@ class GameFlowIT extends AbstractIntegrationTest {
     void aRoomOverItsAiBudgetFallsBackWithoutStopping() {
         FakeAi.install(FAKE);
         try (Party party = Party.create(port, json, FAKE, 3)) {
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             party.screen.phase("INTAKE");
             RoomState room = registry.find(party.code).orElseThrow();
             room.call(r -> {
@@ -267,12 +252,37 @@ class GameFlowIT extends AbstractIntegrationTest {
                                     .single()
                             > 0);
             JsonNode phone = party.phones
-                    .get(0)
-                    .socket()
+                    .getFirst()
+                    .getSocket()
                     .state(s -> s.path("you").path("assignments").size() == 2);
             phone.path("you")
                     .path("assignments")
                     .forEach(a -> assertThat(a.path("prompt").asString()).doesNotStartWith("AI prompt"));
+        }
+    }
+
+    /** Prompts stay off the shared screen, and the authors of answers are hidden until the reveal. */
+    private static void screenKeepsTheSecretsOfTheStep(JsonNode s) {
+        JsonNode round = s.path("round");
+        if ("ANSWERING".equals(s.path("phase").asString())) {
+            assertThat(round.path("prompt").isMissingNode())
+                    .as("prompts stay off the shared screen")
+                    .isTrue();
+            assertThat(s.path("you").path("assignments").isMissingNode()).isTrue();
+        }
+        if ("VOTING".equals(s.path("phase").asString())
+                && "ANSWER_DUEL".equals(round.path("kind").asString())) {
+            round.path("options")
+                    .forEach(o -> assertThat(o.path("authorId").isMissingNode())
+                            .as("authors hidden")
+                            .isTrue());
+        }
+        if ("REVEAL".equals(s.path("phase").asString())
+                && "ANSWER_DUEL".equals(round.path("kind").asString())) {
+            round.path("options")
+                    .forEach(o -> assertThat(o.path("authorId").isString())
+                            .as("authors revealed")
+                            .isTrue());
         }
     }
 }

@@ -20,7 +20,7 @@ public final class ContentRuleUtils {
                     "link",
                     Pattern.compile("(?i)\\b(?:https?://|www\\.)\\S+"
                             + "|\\b[a-z0-9-]+\\.(?:com|net|org|io|ru|de|uk|me|co|app|ly|gg|tv)\\b")),
-            new Rule("contact_info", Pattern.compile("(?i)(?<![\\w])@[a-z0-9_.]{3,}")),
+            new Rule("contact_info", Pattern.compile("(?i)(?<!\\w)@[a-z0-9_.]{3,}")),
             new Rule(
                     "address",
                     Pattern.compile("(?i)\\b\\d{1,5}\\s+(?:[a-z]+\\s){0,3}"
@@ -61,12 +61,12 @@ public final class ContentRuleUtils {
 
     /** Checks an answer shown on the shared screen. Returns the violated category, if any. */
     public static Optional<String> checkAnswer(String text) {
-        return first(ALWAYS, text);
+        return firstAlways(text);
     }
 
     /** Checks a secret or intake answer: stricter, also refuses sensitive topics. */
     public static Optional<String> checkPersonal(String text) {
-        Optional<String> always = first(ALWAYS, text);
+        Optional<String> always = firstAlways(text);
         if (always.isPresent()) {
             return always;
         }
@@ -79,7 +79,7 @@ public final class ContentRuleUtils {
     public static boolean acceptableName(String name) {
         return HAS_LETTER_OR_DIGIT.matcher(name).find()
                 && !CONTROL.matcher(name).find()
-                && first(ALWAYS, name).isEmpty();
+                && firstAlways(name).isEmpty();
     }
 
     /** Collapses whitespace and strips invisible characters that could smuggle formatting. */
@@ -90,8 +90,9 @@ public final class ContentRuleUtils {
                 .trim();
     }
 
-    private static Optional<String> first(List<Rule> rules, String text) {
-        for (Rule rule : rules) {
+    /** The category of the first rule every text must pass that {@code text} breaks. */
+    private static Optional<String> firstAlways(String text) {
+        for (Rule rule : ALWAYS) {
             if (rule.pattern().matcher(text).find()) {
                 return Optional.of(rule.category());
             }

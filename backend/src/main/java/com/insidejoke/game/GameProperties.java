@@ -27,7 +27,7 @@ public record GameProperties(
         @DefaultValue("12") int maxNameChars,
         @DefaultValue("40") int roomLlmBudget,
         @DefaultValue("60") int roomTtsBudget,
-        /** Checks of secrets and intake answers per room and game, apart from content generation. */
+        // Checks of secrets and intake answers per room and game, apart from content generation.
         @DefaultValue("200") int roomModerationBudget,
-        /** Per player and game, so one player can't use up everyone's checks (8 × 25 = the room budget). */
+        // Per player and game, so one player can't use up everyone's checks (8 × 25 = the room budget).
         @DefaultValue("25") int maxModerationChecksPerPlayer) {}

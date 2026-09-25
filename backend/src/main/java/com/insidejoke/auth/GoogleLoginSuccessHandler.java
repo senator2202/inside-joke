@@ -4,6 +4,7 @@ import com.insidejoke.common.AppProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -28,7 +29,8 @@ public class GoogleLoginSuccessHandler implements AuthenticationSuccessHandler {
     }
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication auth)
+    public void onAuthenticationSuccess(
+            @NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Authentication auth)
             throws IOException {
         if (!(auth.getPrincipal() instanceof OidcUser oidc)
                 || oidc.getEmail() == null

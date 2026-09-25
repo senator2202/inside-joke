@@ -11,12 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /** The log of every pass, bought or granted, with its purchase, refund and audit trail (read model for the admin panel). */
 @Repository
 public class PassLogRepository {
+
+    private static final RowMapper<Entry> ROW_MAPPER = (rs, rowNum) -> entry(rs);
 
     /** Filters; null means any. Dates are UTC days, both included; {@code email} is a case-insensitive fragment. */
     public record Filter(
@@ -119,14 +122,19 @@ public class PassLogRepository {
         return sql.append(")").toString();
     }
 
+    /** The filtered rows as a CTE, then {@code select} from them with the status filter; fills {@code params}. */
+    private String selectRows(Filter f, Instant now, String select, List<Object> params) {
+        String cte = rowsCte(f, now, params);
+        if (f.status() == null) {
+            return cte + " SELECT " + select + " FROM rows";
+        }
+        params.add(f.status().name());
+        return cte + " SELECT " + select + " FROM rows WHERE status = ?";
+    }
+
     public long count(Filter f, Instant now) {
         List<Object> params = new ArrayList<>();
-        String cte = rowsCte(f, now, params);
-        String where = f.status() == null ? "" : " WHERE status = ?";
-        if (f.status() != null) {
-            params.add(f.status().name());
-        }
-        return jdbc.sql(cte + " SELECT count(*) FROM rows" + where)
+        return jdbc.sql(selectRows(f, now, "count(*)", params))
                 .params(params)
                 .query(Long.class)
                 .single();
@@ -134,21 +142,19 @@ public class PassLogRepository {
 
     public List<Entry> list(Filter f, Sort sort, boolean ascending, int limit, long offset, Instant now) {
         List<Object> params = new ArrayList<>();
-        String cte = rowsCte(f, now, params);
-        String where = f.status() == null ? "" : " WHERE status = ?";
-        if (f.status() != null) {
-            params.add(f.status().name());
-        }
+        String rows = selectRows(
+                f,
+                now,
+                "rows.*, (SELECT count(*) FROM game_session gs WHERE gs.entitlement_id = rows.id) AS games_played",
+                params);
         params.add(limit);
         params.add(offset);
         String direction = ascending ? "ASC" : "DESC";
-        return jdbc.sql(cte
-                        + " SELECT rows.*, (SELECT count(*) FROM game_session gs WHERE gs.entitlement_id = rows.id) "
-                        + "AS games_played FROM rows" + where + " ORDER BY " + sort.column + " " + direction
+        return jdbc.sql(rows + " ORDER BY " + sort.column + " " + direction
                         + " NULLS LAST, id " + direction
                         + " LIMIT ? OFFSET ?")
                 .params(params)
-                .query(PassLogRepository::entry)
+                .query(ROW_MAPPER)
                 .list();
     }
 
@@ -187,7 +193,7 @@ public class PassLogRepository {
                 .list();
     }
 
-    private static Entry entry(ResultSet rs, int row) throws SQLException {
+    private static Entry entry(ResultSet rs) throws SQLException {
         return new Entry(
                 DbUtils.uuid(rs, "id"),
                 Product.valueOf(rs.getString("type")),

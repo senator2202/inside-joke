@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -56,7 +57,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) {
+    public void afterConnectionEstablished(@NonNull WebSocketSession session) {
         WebSocketSession safe = new ConcurrentWebSocketSessionDecorator(session, 5000, 512 * 1024);
         ConnectionHandler c = new ConnectionHandler(safe, io);
         connections.put(session.getId(), c);
@@ -71,7 +72,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+    protected void handleTextMessage(WebSocketSession session, @NonNull TextMessage message) {
         ConnectionHandler c = connections.get(session.getId());
         if (c == null || c.closed) {
             return;
@@ -146,7 +147,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+    public void afterConnectionClosed(WebSocketSession session, @NonNull CloseStatus status) {
         ConnectionHandler c = connections.remove(session.getId());
         if (c == null) {
             return;
@@ -159,7 +160,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) {
+    public void handleTransportError(WebSocketSession session, @NonNull Throwable exception) {
         ConnectionHandler c = connections.get(session.getId());
         if (c != null) {
             c.close(CloseStatus.SERVER_ERROR);

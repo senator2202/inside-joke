@@ -14,7 +14,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -25,9 +24,9 @@ class DuelRulesTest {
 
     private final GameHarness h = new GameHarness();
 
-    /** Everyone has answered; the first duel is being voted on. */
-    private GameHarness.Party atFirstVote(int players) {
-        GameHarness.Party party = h.party(players);
+    /** Four players have answered; the first duel is being voted on by the two outside it. */
+    private GameHarness.Party atFirstVote() {
+        GameHarness.Party party = h.party(4);
         h.toAnswering(party);
         h.answerAll(party);
         assertThat(h.phase(party)).isEqualTo(Phase.VOTING);
@@ -100,7 +99,7 @@ class DuelRulesTest {
 
     @Test
     void onceEveryoneHasAnsweredVotingStartsWithoutTheDuellists() {
-        GameHarness.Party party = atFirstVote(4);
+        GameHarness.Party party = atFirstVote();
         DuelState duel = current(party);
 
         assertThat(h.round(party).getDuelIndex()).isZero();
@@ -120,11 +119,11 @@ class DuelRulesTest {
 
     @Test
     void eachVoteIsWorthAHundredAndAWipeoutAddsTwoHundredFifty() {
-        GameHarness.Party party = atFirstVote(4);
+        GameHarness.Party party = atFirstVote();
         DuelState duel = current(party);
         List<GameHarness.Seat> voters = h.voters(party);
 
-        vote(party, voters.get(0), "A").ok();
+        vote(party, voters.getFirst(), "A").ok();
         assertThat(h.phase(party)).isEqualTo(Phase.VOTING);
         vote(party, voters.get(1), "A").ok();
 
@@ -142,10 +141,10 @@ class DuelRulesTest {
 
     @Test
     void aSplitVoteGivesEachAuthorTheirVotesAndNoWinner() {
-        GameHarness.Party party = atFirstVote(4);
+        GameHarness.Party party = atFirstVote();
         DuelState duel = current(party);
         List<GameHarness.Seat> voters = h.voters(party);
-        vote(party, voters.get(0), "A").ok();
+        vote(party, voters.getFirst(), "A").ok();
         vote(party, voters.get(1), "B").ok();
 
         assertThat(h.score(party, party.byId(duel.getPlayerA()))).isEqualTo(100);
@@ -156,12 +155,12 @@ class DuelRulesTest {
 
     @Test
     void aVoteIsFinalAndOnlyForTheOptionsShown() {
-        GameHarness.Party party = atFirstVote(4);
+        GameHarness.Party party = atFirstVote();
         List<GameHarness.Seat> voters = h.voters(party);
-        assertThat(vote(party, voters.get(0), "C").error()).isEqualTo(ErrorCode.VALIDATION_FAILED);
-        vote(party, voters.get(0), "B").ok();
-        assertThat(vote(party, voters.get(0), "A").error()).isEqualTo(ErrorCode.INVALID_PHASE);
-        assertThat(h.view(party, voters.get(0)).you().myVote()).isEqualTo("B");
+        assertThat(vote(party, voters.getFirst(), "C").error()).isEqualTo(ErrorCode.VALIDATION_FAILED);
+        vote(party, voters.getFirst(), "B").ok();
+        assertThat(vote(party, voters.getFirst(), "A").error()).isEqualTo(ErrorCode.INVALID_PHASE);
+        assertThat(h.view(party, voters.getFirst()).you().myVote()).isEqualTo("B");
 
         vote(party, voters.get(1), "B").ok();
         assertThat(vote(party, voters.get(1), "A").error())
@@ -171,7 +170,7 @@ class DuelRulesTest {
 
     @Test
     void votingLastsTwentySecondsAndTheRevealTwelve() {
-        GameHarness.Party party = atFirstVote(4);
+        GameHarness.Party party = atFirstVote();
         h.advance(Duration.ofSeconds(19));
         assertThat(h.phase(party)).isEqualTo(Phase.VOTING);
         h.advance(Duration.ofSeconds(2));
@@ -220,15 +219,15 @@ class DuelRulesTest {
 
         Map<String, String> seen = new HashMap<>();
         for (int i = 0; i < 20 && h.phase(party) != Phase.ROUND_VOTE; i++) {
-            seen.put(h.phase(party) + "" + h.round(party).getDuelIndex(), h.everyonesViews(party.room()));
+            seen.put(h.phase(party) + "" + h.round(party).getDuelIndex(), h.allViews(party.room()));
             h.owner(party, "game.next");
         }
         assertThat(seen.values()).noneMatch(views -> views.contains("BANNED joke"));
-        assertThat(seen.values().stream().collect(Collectors.joining())).contains("The host won't show this answer");
+        assertThat(String.join("", seen.values())).contains("The host won't show this answer");
 
-        DuelState hidden = target;
-        String opponent = hidden.getPlayerA().equals(rude.id()) ? hidden.getPlayerB() : hidden.getPlayerA();
-        assertThat(hidden.getPlayerA().equals(rude.id()) ? hidden.getPointsB() : hidden.getPointsA())
+        boolean rudeIsA = target.getPlayerA().equals(rude.id());
+        String opponent = rudeIsA ? target.getPlayerB() : target.getPlayerA();
+        assertThat(rudeIsA ? target.getPointsB() : target.getPointsA())
                 .as("the opponent wins the duel")
                 .isEqualTo(100);
         assertThat(h.player(party, party.byId(opponent)).getDuelsWon()).isPositive();
@@ -238,7 +237,7 @@ class DuelRulesTest {
 
     @Test
     void theMostVotedAnswerBecomesTheAnswerOfTheNight() {
-        GameHarness.Party party = atFirstVote(4);
+        GameHarness.Party party = atFirstVote();
         DuelState duel = current(party);
         h.voters(party).forEach(v -> vote(party, v, "B").ok());
 

@@ -110,7 +110,7 @@
 
 - В `auth` лежит вся почта: `EmailSender`, `SmtpEmailSender`, `ResendEmailSender`, `LogEmailSender`,
   `MailProperties`, `EmailMessage`. Почта нужна не только входу — выделить пакет `mail`.
-- `common` стал «ящиком для всего»: веб-настройки (`WebConfig`, `SpaController`), сервис флагов
+- `common` стал «ящиком для всего»: веб-настройки (`WebConfig`, маршруты SPA), сервис флагов
   (`AppSettingsService`, `SettingKey`), ограничение частоты (`RateLimiter`), публичный статус (`StatusController`),
   утилиты (`Db`, `Tokens`, `ClientIp`). Разделить: `web`, `settings`, `ratelimit`; в `common` оставить общие ошибки
   и утилиты.

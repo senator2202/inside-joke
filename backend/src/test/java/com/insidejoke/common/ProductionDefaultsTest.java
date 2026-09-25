@@ -37,6 +37,7 @@ class ProductionDefaultsTest {
     }
 
     @Test
+    @SuppressWarnings("SpellCheckingInspection") // the docker compose password
     void theLocalProfileKeepsTheDevelopmentPassword() {
         StandardEnvironment local = environment(yaml("application.yml"), yaml("application-local.yml"));
         assertThat(local.getProperty("spring.datasource.password")).isEqualTo("insidejoke");

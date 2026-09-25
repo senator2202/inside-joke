@@ -95,6 +95,7 @@ public final class ApiClient {
                 .orElse(null);
     }
 
+    @SuppressWarnings("UastIncorrectHttpHeaderInspection") // Spring Security's CSRF header
     private HttpRequest.Builder withCsrf(HttpRequest.Builder builder) {
         String token = cookie("XSRF-TOKEN");
         if (token == null) {

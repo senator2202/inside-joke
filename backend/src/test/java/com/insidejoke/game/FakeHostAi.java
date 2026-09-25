@@ -35,20 +35,22 @@ final class FakeHostAi implements HostAiService {
         for (int i = 1; i <= 16; i++) {
             prompts.add(new RoundContent.DuelPrompt("AI prompt " + i + " for round " + n, null));
         }
-        RoundContent.Truth truth;
+        return Optional.of(new RoundContent(prompts, "AI question for round " + n, truth(request), "AI"));
+    }
+
+    /** About the first secret when there is one (restated or invented), else an invention about the first player. */
+    private static RoundContent.Truth truth(RoundParams request) {
         if (request.dossier().isEmpty()) {
             PlayerInfo subject = request.players().getFirst();
-            truth = new RoundContent.Truth(subject.id(), null, "AI invention about " + subject.name(), null, null);
-        } else {
-            Fact fact = request.dossier().getFirst();
-            truth = new RoundContent.Truth(
-                    fact.aboutPlayerId(),
-                    "Restated: " + fact.text(),
-                    "AI invention for round " + n,
-                    "AI truth line",
-                    "AI fake line");
+            return new RoundContent.Truth(subject.id(), null, "AI invention about " + subject.name(), null, null);
         }
-        return Optional.of(new RoundContent(prompts, "AI question for round " + n, truth, "AI"));
+        Fact fact = request.dossier().getFirst();
+        return new RoundContent.Truth(
+                fact.aboutPlayerId(),
+                "Restated: " + fact.text(),
+                "AI invention for round " + request.roundNumber(),
+                "AI truth line",
+                "AI fake line");
     }
 
     @Override

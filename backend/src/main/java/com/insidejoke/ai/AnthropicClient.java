@@ -58,6 +58,7 @@ public class AnthropicClient {
         return props.model();
     }
 
+    @SuppressWarnings("UastIncorrectHttpHeaderInspection") // Anthropic API headers
     public Completion complete(String system, String user, int maxTokens) throws AiCallException {
         String body = json.writeValueAsString(Map.of(
                 "model",
@@ -117,6 +118,7 @@ public class AnthropicClient {
         return (int) ((System.nanoTime() - startedNanos) / 1_000_000);
     }
 
+    @SuppressWarnings("SpellCheckingInspection") // the Anthropic header prefix
     private void captureRateLimits(HttpResponse<?> response) {
         Map<String, String> limits = new TreeMap<>();
         response.headers().map().forEach((name, values) -> {

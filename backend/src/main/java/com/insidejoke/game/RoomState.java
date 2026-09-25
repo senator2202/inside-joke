@@ -17,7 +17,6 @@ import java.util.UUID;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -150,7 +149,7 @@ public final class RoomState {
     public List<PlayerState> standings() {
         return activePlayers().stream()
                 .sorted(Comparator.comparingInt((PlayerState p) -> -p.getScore())
-                        .thenComparing(p -> p.getJoinedAt()))
+                        .thenComparing(PlayerState::getJoinedAt))
                 .toList();
     }
 
@@ -259,11 +258,11 @@ public final class RoomState {
         this.thinkingUntilMs = thinkingUntilMs;
     }
 
-    public Pending getPending() {
+    Pending getPending() {
         return pending;
     }
 
-    public void setPending(Pending pending) {
+    void setPending(Pending pending) {
         this.pending = pending;
     }
 
@@ -323,8 +322,8 @@ public final class RoomState {
         return Collections.unmodifiableList(dossier);
     }
 
-    public boolean addDossier(DossierFact value) {
-        return dossier.add(value);
+    public void addDossier(DossierFact value) {
+        dossier.add(value);
     }
 
     public void clearDossier() {
@@ -363,11 +362,11 @@ public final class RoomState {
         this.roundsTotal = roundsTotal;
     }
 
-    public RoundState getRound() {
+    RoundState getRound() {
         return round;
     }
 
-    public void setRound(RoundState round) {
+    void setRound(RoundState round) {
         this.round = round;
     }
 
@@ -379,9 +378,9 @@ public final class RoomState {
         kindCounts.clear();
     }
 
-    public Integer mergeKindCount(
-            RoundKind key, Integer value, BiFunction<? super Integer, ? super Integer, ? extends Integer> remap) {
-        return kindCounts.merge(key, value, remap);
+    /** One more round of {@code kind} played this game. */
+    public void countKind(RoundKind kind) {
+        kindCounts.merge(kind, 1, Integer::sum);
     }
 
     public Map<String, RoundKind> getKindVotes() {
@@ -400,8 +399,8 @@ public final class RoomState {
         return Collections.unmodifiableMap(content);
     }
 
-    public RoundContent putIfAbsentContent(Integer key, RoundContent value) {
-        return content.putIfAbsent(key, value);
+    public void putIfAbsentContent(Integer key, RoundContent value) {
+        content.putIfAbsent(key, value);
     }
 
     public Set<Integer> getContentRequested() {
@@ -416,8 +415,8 @@ public final class RoomState {
         return Collections.unmodifiableSet(recentPrompts);
     }
 
-    public boolean addRecentPrompt(String value) {
-        return recentPrompts.add(value);
+    public void addRecentPrompt(String value) {
+        recentPrompts.add(value);
     }
 
     public boolean isReviewPending() {

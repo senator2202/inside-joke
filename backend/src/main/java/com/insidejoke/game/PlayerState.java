@@ -8,10 +8,9 @@ import java.util.Arrays;
 public final class PlayerState {
 
     private final String id;
-    private final String token;
     private final Instant joinedAt;
-    private String name;
-    private String emoji;
+    private final String name;
+    private final String emoji;
     private int connections;
     private Instant disconnectedAt;
     private boolean removed;
@@ -31,9 +30,8 @@ public final class PlayerState {
     private int correctGuesses;
     private int whoPicks;
 
-    PlayerState(String id, String token, String name, String emoji, Instant joinedAt) {
+    PlayerState(String id, String name, String emoji, Instant joinedAt) {
         this.id = id;
-        this.token = token;
         this.name = name;
         this.emoji = emoji;
         this.joinedAt = joinedAt;

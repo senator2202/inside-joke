@@ -66,7 +66,7 @@ class AccountIT extends AbstractIntegrationTest {
                             .single())
                     .as("purchases stay for accounting")
                     .isEqualTo(1);
-            Await.until("room closed", () -> party.phones.get(0).socket().received("closed"));
+            Await.until("room closed", () -> party.phones.getFirst().getSocket().received("closed"));
 
             ApiClient again = Party.signIn(port, json, FAKE, email);
             assertThat(UUID.fromString(again.get("/api/me").json().path("id").asString()))

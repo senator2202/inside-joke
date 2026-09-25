@@ -2,6 +2,7 @@ package com.insidejoke.auth;
 
 import com.insidejoke.common.AppProperties;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -20,12 +21,12 @@ public class GoogleClientRegistrationRepository {
 
     public static final String REGISTRATION_ID = "google";
 
-    private final Optional<ClientRegistrationRepository> repository;
+    private final @Nullable ClientRegistrationRepository repository;
 
     public GoogleClientRegistrationRepository(GoogleProperties google, AppProperties app) {
         log.info(describe(google, app.publicUrl()));
         if (!google.enabled()) {
-            this.repository = Optional.empty();
+            this.repository = null;
             return;
         }
         ClientRegistration registration = ClientRegistration.withRegistrationId(REGISTRATION_ID)
@@ -43,15 +44,15 @@ public class GoogleClientRegistrationRepository {
                 .userNameAttributeName(IdTokenClaimNames.SUB)
                 .clientName("Google")
                 .build();
-        this.repository = Optional.of(new InMemoryClientRegistrationRepository(registration));
+        this.repository = new InMemoryClientRegistrationRepository(registration);
     }
 
     public Optional<ClientRegistrationRepository> repository() {
-        return repository;
+        return Optional.ofNullable(repository);
     }
 
     public boolean enabled() {
-        return repository.isPresent();
+        return repository != null;
     }
 
     /** One startup line: whether the sign-in page offers Google, and what to fix or register. */
