@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AiReportService {
 
-    /** Outcome filter value meaning "any failure": the provider was called and it didn't work. */
+    /** Outcome filter value meaning "any failure": the provider was called, and it didn't work. */
     public static final String FAILURES = "FAILURES";
 
     private final AiCallRepository calls;

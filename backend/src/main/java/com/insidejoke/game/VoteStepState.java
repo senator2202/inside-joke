@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
 
 /** One thing to vote on: a duel, a "who of us" question or a truth-or-AI statement. */
 final class VoteStepState {
@@ -34,15 +33,15 @@ final class VoteStepState {
     // ---------------------------------------------------------------- access
 
     public List<String> getOptions() {
-        return Collections.unmodifiableList(options);
+        return options;
     }
 
     public Set<String> getEligible() {
         return Collections.unmodifiableSet(eligible);
     }
 
-    public boolean removeEligible(Object value) {
-        return eligible.remove(value);
+    public void removeEligible(String playerId) {
+        eligible.remove(playerId);
     }
 
     public Map<String, String> getVotes() {
@@ -57,9 +56,9 @@ final class VoteStepState {
         return Collections.unmodifiableMap(audience);
     }
 
-    public Integer mergeAudience(
-            String key, Integer value, BiFunction<? super Integer, ? super Integer, ? extends Integer> remap) {
-        return audience.merge(key, value, remap);
+    /** One more viewer's vote for {@code option}. */
+    public void addAudienceVote(String option) {
+        audience.merge(option, 1, Integer::sum);
     }
 
     public Set<String> getAudienceVoters() {

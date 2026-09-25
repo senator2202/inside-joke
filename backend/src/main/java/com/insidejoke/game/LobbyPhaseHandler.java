@@ -190,11 +190,11 @@ final class LobbyPhaseHandler {
         p.setRemoved(true);
         if (playerId.equals(r.getCaptainId())) {
             r.setCaptainId(r.activePlayers().stream()
-                    .filter(x -> x.connected())
-                    .map(x -> x.getId())
+                    .filter(PlayerState::connected)
+                    .map(PlayerState::getId)
                     .findFirst()
                     .orElse(r.activePlayers().stream()
-                            .map(x -> x.getId())
+                            .map(PlayerState::getId)
                             .findFirst()
                             .orElse(null)));
         }

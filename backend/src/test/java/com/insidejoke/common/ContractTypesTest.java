@@ -3,7 +3,7 @@ package com.insidejoke.common;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.io.IOException;
+import com.insidejoke.support.ClassScanUtils;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -23,7 +23,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 
 /**
  * Generates the TypeScript contract ({@code frontend/src/lib/api/contract.gen.ts}) from the API records: every record in
@@ -49,19 +48,11 @@ class ContractTypesTest {
                 .isEqualTo(generated);
     }
 
-    static String generate() throws ClassNotFoundException, IOException {
-        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false) {
-            @Override
-            protected boolean isCandidateComponent(
-                    org.springframework.beans.factory.annotation.AnnotatedBeanDefinition d) {
-                return true;
-            }
-        };
-        scanner.addIncludeFilter((reader, factory) -> "java.lang.Record"
-                        .equals(reader.getClassMetadata().getSuperClassName())
-                && (reader.getClassMetadata().getClassName().matches("com\\.insidejoke\\..*\\.dto\\.[A-Za-z]+")));
+    static String generate() throws ClassNotFoundException {
+        var dtos = ClassScanUtils.scanner(c -> "java.lang.Record".equals(c.getSuperClassName())
+                && c.getClassName().matches("com\\.insidejoke\\..*\\.dto\\.[A-Za-z]+"));
         Deque<Class<?>> queue = new ArrayDeque<>();
-        for (var d : scanner.findCandidateComponents("com.insidejoke")) {
+        for (var d : dtos.findCandidateComponents("com.insidejoke")) {
             queue.add(Class.forName(d.getBeanClassName()));
         }
         Map<String, String> out = new TreeMap<>();

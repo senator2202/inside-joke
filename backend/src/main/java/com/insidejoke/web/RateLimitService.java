@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 /**
- * In-memory keyed rate limits (Bucket4j). One server means no distributed limiter is needed.
+ * Rate limits per key, held in memory with Bucket4j. One server means no distributed limiter is needed.
  */
 @Service
 public class RateLimitService {

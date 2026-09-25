@@ -10,8 +10,10 @@ frontend/coverage/
 .env.*
 !.env.example
 
-# IDEs
-.idea/
+# IDEs: shared IntelliJ settings (inspection profile, project dictionary) are kept, the rest is personal
+.idea/*
+!.idea/dictionaries/
+!.idea/inspectionProfiles/
 !.run/
 *.iml
 .vscode/

@@ -189,7 +189,7 @@ class IntakeRulesTest {
     }
 
     @Test
-    void onePlayerCannotBurnEveryonesSecretChecks() {
+    void onePlayerCannotUseUpTheSecretChecksOfAll() {
         GameHarness.Party party = h.party(3);
         GameHarness.Seat spammer = party.seat(0);
         for (int i = 0; i < h.props.maxModerationChecksPerPlayer(); i++) {

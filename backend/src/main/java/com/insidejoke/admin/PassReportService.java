@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 /**
- * The admin pass log: every pass, bought or granted, with who, when, how much and what happened to it; a summary for
+ * The admin pass log: every pass, bought or granted, with its holder, dates, price and what happened to it; a summary for
  * the same filters; and the refunds and chargebacks the server received but did not apply. Queries live in
  * {@link PassLogRepository} and {@link WebhookEventRepository}; this class checks the parameters and shapes the answer.
  */

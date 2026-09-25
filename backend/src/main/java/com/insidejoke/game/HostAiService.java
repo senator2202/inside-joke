@@ -65,6 +65,6 @@ public interface HostAiService {
     /** False when secrets can never be accepted here: no model to check them and rules alone are not allowed. */
     boolean secretsCheckable();
 
-    /** Synthesises speech and returns an audio id for GET /api/voice-lines/{id}. */
+    /** Synthesizes speech and returns an audio id for GET /api/voice-lines/{id}. */
     Optional<String> speak(CallContext ctx, String text);
 }

@@ -11,11 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class AiCallRepository {
+
+    private static final RowMapper<LoggedCall> ROW_MAPPER = (rs, rowNum) -> logged(rs);
 
     private final JdbcClient jdbc;
 
@@ -134,7 +137,7 @@ public class AiCallRepository {
                         + "WHERE c.provider = '" + AiProvider.ANTHROPIC.wire() + "' AND "
                         + (failuresOnly ? "c.outcome IN " + FAILED : "c.outcome <> " + DbUtils.sql(AiOutcome.FALLBACK))
                         + " ORDER BY c.created_at DESC, c.id DESC LIMIT 1")
-                .query(AiCallRepository::logged)
+                .query(ROW_MAPPER)
                 .optional();
     }
 
@@ -155,7 +158,7 @@ public class AiCallRepository {
         return jdbc.sql("SELECT c.*, g.room_code FROM ai_call c LEFT JOIN game_session g ON g.id = c.game_session_id"
                         + where + " ORDER BY c.created_at DESC, c.id DESC LIMIT ? OFFSET ?")
                 .params(params)
-                .query(AiCallRepository::logged)
+                .query(ROW_MAPPER)
                 .list();
     }
 
@@ -182,7 +185,7 @@ public class AiCallRepository {
         return where.toString();
     }
 
-    private static LoggedCall logged(ResultSet rs, int row) throws SQLException {
+    private static LoggedCall logged(ResultSet rs) throws SQLException {
         return new LoggedCall(
                 rs.getLong("id"),
                 DbUtils.instant(rs, "created_at"),

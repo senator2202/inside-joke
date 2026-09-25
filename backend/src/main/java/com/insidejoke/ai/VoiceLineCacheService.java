@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Host voice clips in memory for 10 minutes (blueprint 8: GET /api/voice-lines/{id}). Ids are unguessable.
- * Identical texts share one clip, so canned lobby lines are synthesised once, not once per room.
+ * Identical texts share one clip, so canned lobby lines are synthesized once, not once per room.
  */
 @Service
 public class VoiceLineCacheService {

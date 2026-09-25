@@ -6,11 +6,13 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * Background work (AI calls, database writes) that runs only when a test says so, on the test's thread. Holding it
  * back is how a unit test makes the AI "late"; {@link #runAll()} is the moment its answer arrives.
  */
+@NullMarked
 public final class ManualExecutor extends AbstractExecutorService {
 
     private final Queue<Runnable> queue = new ArrayDeque<>();

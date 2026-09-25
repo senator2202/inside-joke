@@ -25,18 +25,22 @@ class PaddleSignatureUtilsTest {
 
     @Test
     void acceptsItsOwnSignatureAndRejectsTampering() {
-        String header = PaddleSignatureUtils.sign(BODY, "s3cret", NOW);
-        assertThat(PaddleSignatureUtils.valid(header, BODY, "s3cret", NOW, TOLERANCE))
+        String header = PaddleSignatureUtils.sign(BODY, "test-secret", NOW);
+        assertThat(PaddleSignatureUtils.valid(header, BODY, "test-secret", NOW, TOLERANCE))
                 .isTrue();
         assertThat(PaddleSignatureUtils.valid(
-                        header, "{\"event_id\":\"evt_2\"}".getBytes(StandardCharsets.UTF_8), "s3cret", NOW, TOLERANCE))
+                        header,
+                        "{\"event_id\":\"evt_2\"}".getBytes(StandardCharsets.UTF_8),
+                        "test-secret",
+                        NOW,
+                        TOLERANCE))
                 .isFalse();
         assertThat(PaddleSignatureUtils.valid(header, BODY, "other", NOW, TOLERANCE))
                 .isFalse();
         assertThat(PaddleSignatureUtils.valid(
                         header.toUpperCase().replace("TS=", "ts=").replace("H1=", "h1="),
                         BODY,
-                        "s3cret",
+                        "test-secret",
                         NOW,
                         TOLERANCE))
                 .as("hex case does not matter")
@@ -45,14 +49,14 @@ class PaddleSignatureUtilsTest {
 
     @Test
     void rejectsOldOrMalformedHeaders() {
-        String old = PaddleSignatureUtils.sign(BODY, "s3cret", NOW.minus(Duration.ofMinutes(6)));
-        assertThat(PaddleSignatureUtils.valid(old, BODY, "s3cret", NOW, TOLERANCE))
+        String old = PaddleSignatureUtils.sign(BODY, "test-secret", NOW.minus(Duration.ofMinutes(6)));
+        assertThat(PaddleSignatureUtils.valid(old, BODY, "test-secret", NOW, TOLERANCE))
                 .isFalse();
-        assertThat(PaddleSignatureUtils.valid(null, BODY, "s3cret", NOW, TOLERANCE))
+        assertThat(PaddleSignatureUtils.valid(null, BODY, "test-secret", NOW, TOLERANCE))
                 .isFalse();
-        assertThat(PaddleSignatureUtils.valid("h1=abc", BODY, "s3cret", NOW, TOLERANCE))
+        assertThat(PaddleSignatureUtils.valid("h1=abc", BODY, "test-secret", NOW, TOLERANCE))
                 .isFalse();
-        assertThat(PaddleSignatureUtils.valid("ts=abc;h1=abc", BODY, "s3cret", NOW, TOLERANCE))
+        assertThat(PaddleSignatureUtils.valid("ts=abc;h1=abc", BODY, "test-secret", NOW, TOLERANCE))
                 .isFalse();
         String anyHeader = "ts=" + NOW.getEpochSecond() + ";h1=" + "a".repeat(64);
         assertThat(PaddleSignatureUtils.valid(anyHeader, BODY, "", NOW, TOLERANCE))

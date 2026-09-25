@@ -3,13 +3,13 @@ package com.insidejoke.settings;
 import java.util.Arrays;
 import java.util.Optional;
 
-/** Runtime flags and limits stored in app_setting and editable by admins without a deploy. */
+/** Runtime flags and limits stored in app_setting and editable by admins without a deployment. Numbers are 0 or more. */
 public enum SettingKey {
-    FREE_GAMES_ENABLED("free_games_enabled", Kind.BOOLEAN, 0, 0),
-    TTS_ENABLED("tts_enabled", Kind.BOOLEAN, 0, 0),
-    DAILY_FREE_AI_BUDGET_MICROS("daily_free_ai_budget_micros", Kind.INTEGER, 0, 10_000_000_000L),
-    AUDIENCE_CAP("audience_cap", Kind.INTEGER, 0, 20_000),
-    DRAIN_MODE("drain_mode", Kind.BOOLEAN, 0, 0);
+    FREE_GAMES_ENABLED("free_games_enabled", Kind.BOOLEAN, 0),
+    TTS_ENABLED("tts_enabled", Kind.BOOLEAN, 0),
+    DAILY_FREE_AI_BUDGET_MICROS("daily_free_ai_budget_micros", Kind.INTEGER, 10_000_000_000L),
+    AUDIENCE_CAP("audience_cap", Kind.INTEGER, 20_000),
+    DRAIN_MODE("drain_mode", Kind.BOOLEAN, 0);
 
     public enum Kind {
         BOOLEAN,
@@ -18,13 +18,11 @@ public enum SettingKey {
 
     private final String key;
     private final Kind kind;
-    private final long min;
     private final long max;
 
-    SettingKey(String key, Kind kind, long min, long max) {
+    SettingKey(String key, Kind kind, long max) {
         this.key = key;
         this.kind = kind;
-        this.min = min;
         this.max = max;
     }
 
@@ -34,10 +32,6 @@ public enum SettingKey {
 
     public Kind kind() {
         return kind;
-    }
-
-    public long min() {
-        return min;
     }
 
     public long max() {

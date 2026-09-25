@@ -2,16 +2,16 @@ package com.insidejoke.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.insidejoke.support.ClassScanUtils;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.stereotype.Component;
@@ -29,15 +29,8 @@ class NamingConventionsTest {
 
     /** Every class of the application (not the tests), nested ones included. */
     private static List<Class<?>> classes() throws ClassNotFoundException {
-        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false) {
-            @Override
-            protected boolean isCandidateComponent(AnnotatedBeanDefinition definition) {
-                return true;
-            }
-        };
-        scanner.addIncludeFilter((reader, factory) -> true);
         List<Class<?>> out = new ArrayList<>();
-        for (var d : scanner.findCandidateComponents("com.insidejoke")) {
+        for (var d : ClassScanUtils.scanner(metadata -> true).findCandidateComponents("com.insidejoke")) {
             Class<?> c = Class.forName(d.getBeanClassName());
             if (!c.isAnonymousClass() && !c.isSynthetic() && !c.getSimpleName().isEmpty() && !testCode(c)) {
                 out.add(c);
@@ -74,7 +67,7 @@ class NamingConventionsTest {
         if (AnnotatedElementUtils.hasAnnotation(c, Configuration.class)) {
             return c.getSimpleName().endsWith("Config") ? null : "@Configuration must end with Config";
         }
-        return List.of("Client", "Handler", "Listener", "Repository").stream().anyMatch(c.getSimpleName()::endsWith)
+        return Stream.of("Client", "Handler", "Listener", "Repository").anyMatch(c.getSimpleName()::endsWith)
                 ? null
                 : "@Component must end with Client, Handler, Listener or Repository";
     }
@@ -121,7 +114,7 @@ class NamingConventionsTest {
             if (inDto && !(c.isRecord() && n.endsWith("Dto"))) {
                 wrong.add(c.getName() + ": everything in a dto package is a record named ...Dto");
             }
-            if (!inDto && List.of("Dto", "Request", "Response", "View").stream().anyMatch(n::endsWith)) {
+            if (!inDto && Stream.of("Dto", "Request", "Response", "View").anyMatch(n::endsWith)) {
                 wrong.add(c.getName() + ": Dto, Request, Response and View are for API data in dto packages");
             }
         }

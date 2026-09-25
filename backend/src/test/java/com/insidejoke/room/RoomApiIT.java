@@ -107,8 +107,8 @@ class RoomApiIT extends AbstractIntegrationTest {
             assertThat(ok.status()).isEqualTo(201);
             assertThat(ok.json().path("playerId").asString()).startsWith("p");
             JsonNode lobby = party.screen.state(s -> s.path("players").size() == 2);
-            assertThat(lobby.path("players").get(1).path("name").asString()).isEqualTo("Masha");
-            assertThat(lobby.path("players").get(1).path("emoji").asString()).isNotEqualTo("not-an-emoji");
+            assertThat(lobby.path("players").path(1).path("name").asString()).isEqualTo("Masha");
+            assertThat(lobby.path("players").path(1).path("emoji").asString()).isNotEqualTo("not-an-emoji");
         }
     }
 
@@ -136,7 +136,7 @@ class RoomApiIT extends AbstractIntegrationTest {
     @Test
     void joiningAfterTheIntakeIsRefused() {
         try (Party party = Party.create(port, json, FAKE, 3)) {
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             party.screen.phase("INTAKE");
             assertThat(client().post("/api/rooms/" + party.code + "/players", Map.of("name", "Early"))
                             .status())
@@ -233,7 +233,7 @@ class RoomApiIT extends AbstractIntegrationTest {
                     .asString();
             try (var viewer = GameSocket.connect(port, json, viewerToken);
                     var copy = GameSocket.connect(port, json, copyToken)) {
-                stream.captain().socket().ok("game.start", Map.of());
+                stream.captain().getSocket().ok("game.start", Map.of());
                 viewer.state(s -> "INTAKE".equals(s.path("phase").asString()));
                 copy.state(s -> "INTAKE".equals(s.path("phase").asString()));
                 assertThat(String.join("\n", viewer.rawFrames())).doesNotContain(stream.code);
@@ -258,7 +258,12 @@ class RoomApiIT extends AbstractIntegrationTest {
     @Test
     void withAModelConfiguredSecretsAreOpen() {
         try (Party party = Party.create(port, json, FAKE, 1)) {
-            assertThat(party.phones.get(0).socket().latest().path("secretsOpen").asBoolean())
+            assertThat(party.phones
+                            .getFirst()
+                            .getSocket()
+                            .latest()
+                            .path("secretsOpen")
+                            .asBoolean())
                     .isTrue();
         }
     }

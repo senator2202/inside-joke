@@ -10,11 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class PurchaseRepository {
+
+    private static final RowMapper<PurchaseEntity> ROW_MAPPER = (rs, rowNum) -> map(rs);
 
     private static final String COLUMNS =
             "id, user_id, provider_txn_id, product, amount_minor, currency, status, created_at, updated_at";
@@ -34,14 +37,14 @@ public class PurchaseRepository {
                                 + ", ?, ?) ON CONFLICT (provider_txn_id) DO NOTHING RETURNING "
                                 + COLUMNS)
                 .params(userId, txnId, product.name(), amountMinor, currency, DbUtils.ts(now), DbUtils.ts(now))
-                .query(PurchaseRepository::map)
+                .query(ROW_MAPPER)
                 .optional();
     }
 
     public Optional<PurchaseEntity> findByTxn(String txnId) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM purchase WHERE provider_txn_id = ?")
                 .param(txnId)
-                .query(PurchaseRepository::map)
+                .query(ROW_MAPPER)
                 .optional();
     }
 
@@ -55,18 +58,18 @@ public class PurchaseRepository {
                         + "WHERE provider_txn_id = ? AND status <> " + DbUtils.sql(PurchaseStatus.REFUNDED)
                         + " RETURNING " + COLUMNS)
                 .params(DbUtils.ts(now), DbUtils.ts(now), kind.name(), txnId)
-                .query(PurchaseRepository::map)
+                .query(ROW_MAPPER)
                 .optional();
     }
 
     public List<PurchaseEntity> listByUser(UUID userId) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM purchase WHERE user_id = ? ORDER BY created_at DESC")
                 .param(userId)
-                .query(PurchaseRepository::map)
+                .query(ROW_MAPPER)
                 .list();
     }
 
-    static PurchaseEntity map(ResultSet rs, int row) throws SQLException {
+    static PurchaseEntity map(ResultSet rs) throws SQLException {
         return new PurchaseEntity(
                 DbUtils.uuid(rs, "id"),
                 DbUtils.uuid(rs, "user_id"),

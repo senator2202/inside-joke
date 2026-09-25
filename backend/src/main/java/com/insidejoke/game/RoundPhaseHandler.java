@@ -83,7 +83,7 @@ final class RoundPhaseHandler {
     }
 
     void decideKind(RoomState r, RoundKind kind) {
-        r.mergeKindCount(kind, 1, Integer::sum);
+        r.countKind(kind);
         requestContent(r, r.getRoundNumber());
         if (r.getContent().containsKey(GameRuleUtils.contentKey(r, r.getRoundNumber()))) {
             materialize(r, kind);
@@ -216,10 +216,10 @@ final class RoundPhaseHandler {
                 r.addRecentPrompt(question);
                 round.setQuestion(question);
                 Set<String> eligible =
-                        new HashSet<>(present.stream().map(p -> p.getId()).toList());
+                        new HashSet<>(present.stream().map(PlayerState::getId).toList());
                 List<String> options = r.activePlayers().stream()
-                        .filter(p -> eligible.contains(p.getId()))
-                        .map(p -> p.getId())
+                        .map(PlayerState::getId)
+                        .filter(eligible::contains)
                         .toList();
                 round.setVote(new VoteStepState(options, eligible));
                 r.setPhase(Phase.VOTING);
@@ -247,7 +247,7 @@ final class RoundPhaseHandler {
                 round.setFakeLine(truth.fakeLine());
                 String subject = round.getSubjectId();
                 Set<String> eligible = new HashSet<>(present.stream()
-                        .map(p -> p.getId())
+                        .map(PlayerState::getId)
                         .filter(id -> !id.equals(subject))
                         .toList());
                 round.setVote(new VoteStepState(List.of("truth", "ai"), eligible));

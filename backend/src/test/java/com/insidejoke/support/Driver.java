@@ -49,7 +49,7 @@ public final class Driver {
             switch (phase) {
                 case "ANSWERING" -> answerAll(s.path("version").asLong());
                 case "VOTING" -> voteAll(s);
-                case "REVEAL" -> party.captain().socket().ok("game.next", Map.of());
+                case "REVEAL" -> party.captain().getSocket().ok("game.next", Map.of());
                 case "ROUND_VOTE" -> chooseKind();
                 case "INTAKE" -> party.completeIntake();
                 default -> throw new AssertionError("Unexpected phase " + phase);
@@ -61,13 +61,13 @@ public final class Driver {
 
     private void answerAll(long version) {
         for (Party.Phone p : party.phones) {
-            JsonNode st = p.socket().state(x -> x.path("version").asLong() >= version);
+            JsonNode st = p.getSocket().state(x -> x.path("version").asLong() >= version);
             if (!"ANSWERING".equals(st.path("phase").asString())) {
                 return;
             }
             for (JsonNode a : st.path("you").path("assignments")) {
                 if (a.path("answer").isMissingNode() || a.path("answer").isNull()) {
-                    p.socket()
+                    p.getSocket()
                             .ok(
                                     "answer.submit",
                                     Map.of(
@@ -88,7 +88,7 @@ public final class Driver {
         String kind = screen.path("round").path("kind").asString();
         for (Party.Phone p : party.phones) {
             long version = screen.path("version").asLong();
-            JsonNode st = p.socket().state(x -> x.path("version").asLong() >= version);
+            JsonNode st = p.getSocket().state(x -> x.path("version").asLong() >= version);
             if (!key(st).equals(step)) {
                 return;
             }
@@ -100,7 +100,7 @@ public final class Driver {
                     default ->
                         st.path("round").path("options").get(0).path("id").asString();
                 };
-                p.socket().ok("vote.submit", Map.of("optionId", option));
+                p.getSocket().ok("vote.submit", Map.of("optionId", option));
             }
         }
     }
@@ -108,8 +108,8 @@ public final class Driver {
     private void chooseKind() {
         String kind = kindChoices.isEmpty() ? "WHO_OF_US" : kindChoices.removeFirst();
         for (Party.Phone p : party.phones) {
-            p.socket().state(x -> "ROUND_VOTE".equals(x.path("phase").asString()));
-            p.socket().ok("round.kind.vote", Map.of("kind", kind));
+            p.getSocket().state(x -> "ROUND_VOTE".equals(x.path("phase").asString()));
+            p.getSocket().ok("round.kind.vote", Map.of("kind", kind));
         }
         party.screen.ok("game.next", Map.of());
     }

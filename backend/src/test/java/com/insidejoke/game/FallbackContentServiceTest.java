@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,7 +24,7 @@ class FallbackContentServiceTest {
             new FallbackContentService(JsonMapper.builder().build());
 
     private static PlayerState player(String id, String name, String intake) {
-        PlayerState p = new PlayerState(id, "t-" + id, name, "🦊", Instant.EPOCH);
+        PlayerState p = new PlayerState(id, name, "🦊", Instant.EPOCH);
         p.getIntake()[0] = intake;
         return p;
     }
@@ -105,7 +106,7 @@ class FallbackContentServiceTest {
         return LATIN_WORD
                 .matcher(text)
                 .results()
-                .map(m -> m.group())
+                .map(MatchResult::group)
                 .filter(w -> ALLOWED_LATIN.stream().noneMatch(a -> a.contains(w)))
                 .toList();
     }
@@ -118,7 +119,7 @@ class FallbackContentServiceTest {
                 first.duelPrompts().stream().map(RoundContent.DuelPrompt::text).toList());
         RoundContent second = content.round(Language.EN, Tone.FAMILY, List.of(masha), used, new Random(3));
         assertThat(second.duelPrompts()).noneMatch(p -> used.contains(p.text()));
-        assertThat(first.truth().truthStatement()).isEqualTo("Masha told me: \u201cI collect spoons\u201d");
+        assertThat(first.truth().truthStatement()).isEqualTo("Masha told me: “I collect spoons”");
         assertThat(first.truth().fakeStatement()).contains("Masha");
 
         PlayerState ru = player("p1", "Маша", "Собираю ложки");

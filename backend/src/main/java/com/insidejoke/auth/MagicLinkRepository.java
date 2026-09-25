@@ -74,8 +74,8 @@ public class MagicLinkRepository {
                 == 1;
     }
 
-    public int deleteOlderThan(Instant cutoff) {
-        return jdbc.sql("DELETE FROM magic_link_token WHERE created_at < ?")
+    public void deleteOlderThan(Instant cutoff) {
+        jdbc.sql("DELETE FROM magic_link_token WHERE created_at < ?")
                 .param(DbUtils.ts(cutoff))
                 .update();
     }

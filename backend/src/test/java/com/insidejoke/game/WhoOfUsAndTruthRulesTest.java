@@ -3,6 +3,7 @@ package com.insidejoke.game;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.insidejoke.common.ErrorCode;
+import com.insidejoke.game.dto.OptionDto;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,7 @@ class WhoOfUsAndTruthRulesTest {
                 .isEqualTo("AI question for round 2");
         assertThat(h.voters(party)).containsExactlyElementsOf(party.seats());
         assertThat(h.view(party.room(), party.owner()).round().options())
-                .extracting(o -> o.playerId())
+                .extracting(OptionDto::playerId)
                 .containsExactlyElementsOf(
                         party.seats().stream().map(GameHarness.Seat::id).toList());
 

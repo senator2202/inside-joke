@@ -76,7 +76,7 @@ public class GameAccessService implements GameAccessPort {
                         denied.reason(),
                         denied.reason().defaultMessage(),
                         Map.of("reason", denied.reason().name()));
-            case Free free -> new Started(games.insert(sessionRow(req, true, null, now)), true, null);
+            case Free() -> new Started(games.insert(sessionRow(req, true, null, now)), true, null);
             case Paid paid ->
                 new Started(
                         games.insert(sessionRow(req, false, paid.entitlement().id(), now)),
@@ -89,11 +89,11 @@ public class GameAccessService implements GameAccessPort {
         Instant now = clock.instant();
         Evaluation e = evaluate(hostUserId, now);
         String next = switch (e.decision()) {
-            case Paid p -> p.entitlement().type().name();
-            case Free f -> "FREE";
-            case Denied d -> "PAYWALL";
+            case Paid(EntitlementEntity pass) -> pass.type().name();
+            case Free() -> "FREE";
+            case Denied(ErrorCode ignored) -> "PAYWALL";
         };
-        ErrorCode reason = e.decision() instanceof Denied d ? d.reason() : null;
+        ErrorCode reason = e.decision() instanceof Denied(ErrorCode refusal) ? refusal : null;
         return new AccessStatusDto(
                 e.freeGamesEnabled(), e.freeGameAvailable(), e.nextFreeGameAt(), e.passes(), next, reason);
     }

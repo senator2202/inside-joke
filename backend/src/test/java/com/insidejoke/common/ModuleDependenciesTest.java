@@ -77,7 +77,7 @@ class ModuleDependenciesTest {
                 return cycle;
             }
         }
-        path.remove(path.size() - 1);
+        path.removeLast();
         state.put(module, 2);
         return null;
     }

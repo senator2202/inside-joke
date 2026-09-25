@@ -12,6 +12,7 @@ import com.insidejoke.moderation.ModerationStage;
 import com.insidejoke.settings.AppSettingsService;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serial;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -49,6 +50,7 @@ public class HostAiServiceImpl implements HostAiService {
 
     /** Shape validation failure; triggers the single retry. */
     static final class InvalidOutputException extends RuntimeException {
+        @Serial
         private static final long serialVersionUID = 1L;
 
         InvalidOutputException(String message) {
@@ -196,11 +198,8 @@ public class HostAiServiceImpl implements HostAiService {
 
     // ------------------------------------------------------------------ duel review, finale, moderation
 
-    @Override
-    public Optional<DuelReview> reviewDuels(CallContext ctx, Tone tone, Language language, List<DuelInput> duels) {
-        String system = prompts.get(REVIEW_PROMPT)
-                .replace("{{tone}}", toneGuide(tone))
-                .replace("{{language}}", language.englishName());
+    /** The duels as the model sees them: the prompt and both answers, with the players' names. */
+    private static List<Map<String, Object>> reviewData(List<DuelInput> duels) {
         List<Map<String, Object>> data = new ArrayList<>();
         for (DuelInput d : duels) {
             Map<String, Object> item = new LinkedHashMap<>();
@@ -212,6 +211,15 @@ public class HostAiServiceImpl implements HostAiService {
             item.put("answerB", d.answerB() == null ? "(no answer)" : d.answerB());
             data.add(item);
         }
+        return data;
+    }
+
+    @Override
+    public Optional<DuelReview> reviewDuels(CallContext ctx, Tone tone, Language language, List<DuelInput> duels) {
+        String system = prompts.get(REVIEW_PROMPT)
+                .replace("{{tone}}", toneGuide(tone))
+                .replace("{{language}}", language.englishName());
+        List<Map<String, Object>> data = reviewData(duels);
         Set<String> ids = duels.stream().map(DuelInput::duelId).collect(Collectors.toSet());
         return ask(ctx, AiPurpose.HOST_LINE, REVIEW_PROMPT, system, userMessage(Map.of("duels", data)), 1200, root -> {
             Map<String, Boolean> blocked = new HashMap<>();
@@ -244,7 +252,7 @@ public class HostAiServiceImpl implements HostAiService {
                 .replace("{{tone}}", toneGuide(tone))
                 .replace("{{language}}", language.englishName());
         List<Map<String, Object>> data = players.stream()
-                .map(p -> Map.<String, Object>of(
+                .map(p -> Map.of(
                         "id",
                         p.id(),
                         "name",
@@ -360,7 +368,7 @@ public class HostAiServiceImpl implements HostAiService {
         }
         try {
             TtsClient.Speech speech = tts.synthesize(text);
-            record(
+            recordOk(
                     ctx,
                     AiPurpose.TTS,
                     AiProvider.TTS.wire(),
@@ -370,8 +378,7 @@ public class HostAiServiceImpl implements HostAiService {
                     null,
                     text.length(),
                     tts.costMicros(text.length()),
-                    speech.latencyMs(),
-                    AiOutcome.OK);
+                    speech.latencyMs());
             return Optional.of(audio.put(key, speech.mp3()));
         } catch (AiCallException e) {
             record(
@@ -400,7 +407,7 @@ public class HostAiServiceImpl implements HostAiService {
 
     /**
      * Wraps players' data, as JSON, in the data block. In JSON {@code <} and {@code >} can only occur inside strings, so
-     * writing them as unicode escapes keeps the data the same and leaves a player no way to close the block early
+     * writing them as Unicode escapes keeps the data the same and leaves a player no way to close the block early
      * with a {@code </player_data>} of their own.
      */
     static String dataBlock(String dataJson) {
@@ -463,7 +470,7 @@ public class HostAiServiceImpl implements HostAiService {
             long cost = llm.costMicros(completion.inputTokens(), completion.outputTokens());
             try {
                 T value = parse.apply(parseJson(completion.text()));
-                record(
+                recordOk(
                         ctx,
                         purpose,
                         AiProvider.ANTHROPIC.wire(),
@@ -473,8 +480,7 @@ public class HostAiServiceImpl implements HostAiService {
                         completion.outputTokens(),
                         null,
                         cost,
-                        completion.latencyMs(),
-                        AiOutcome.OK);
+                        completion.latencyMs());
                 return Optional.of(value);
             } catch (InvalidOutputException | JacksonException e) {
                 record(
@@ -519,7 +525,8 @@ public class HostAiServiceImpl implements HostAiService {
         return text;
     }
 
-    private void record(
+    /** A call that worked. */
+    private void recordOk(
             CallContext ctx,
             AiPurpose purpose,
             String provider,
@@ -529,9 +536,8 @@ public class HostAiServiceImpl implements HostAiService {
             Integer out,
             Integer chars,
             long cost,
-            int latency,
-            AiOutcome outcome) {
-        record(ctx, purpose, provider, model, promptVersion, in, out, chars, cost, latency, outcome, null);
+            int latency) {
+        record(ctx, purpose, provider, model, promptVersion, in, out, chars, cost, latency, AiOutcome.OK, null);
     }
 
     private void record(

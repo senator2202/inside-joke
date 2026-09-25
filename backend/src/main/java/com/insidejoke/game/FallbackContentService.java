@@ -89,17 +89,16 @@ public class FallbackContentService {
         return List.copyOf(all.subList(0, 3));
     }
 
-    /** A full round's worth of prewritten content, personalised only by player names. */
+    /** A full round's worth of prewritten content, personalized only by player names. */
     public RoundContent round(
             Language language, Tone tone, List<PlayerState> players, Set<String> avoid, RandomGenerator random) {
         Pack pack = pack(language);
         List<String> prompts = new ArrayList<>(pack.duelPrompts.get(tone));
         Collections.shuffle(prompts, random);
         prompts.sort((a, b) -> Boolean.compare(avoid.contains(a), avoid.contains(b)));
-        List<RoundContent.DuelPrompt> duel =
-                prompts.subList(0, Math.min(prompts.size(), Math.max(players.size(), 3))).stream()
-                        .map(p -> new RoundContent.DuelPrompt(p, null))
-                        .toList();
+        List<RoundContent.DuelPrompt> duel = prompts.subList(0, Math.clamp(players.size(), 3, prompts.size())).stream()
+                .map(p -> new RoundContent.DuelPrompt(p, null))
+                .toList();
         List<String> who = new ArrayList<>(pack.whoOfUs.get(tone));
         who.removeIf(avoid::contains);
         if (who.isEmpty()) {

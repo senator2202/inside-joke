@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 final class RoundState {
 
@@ -53,8 +52,8 @@ final class RoundState {
         return Collections.unmodifiableList(duels);
     }
 
-    public boolean addDuel(DuelState value) {
-        return duels.add(value);
+    public void addDuel(DuelState value) {
+        duels.add(value);
     }
 
     public int getDuelIndex() {
@@ -129,9 +128,9 @@ final class RoundState {
         this.points = points;
     }
 
-    public Integer mergePoint(
-            String key, Integer value, BiFunction<? super Integer, ? super Integer, ? extends Integer> remap) {
-        return points.merge(key, value, remap);
+    /** Adds {@code delta} to what {@code playerId} scored this round. */
+    public void addPoints(String playerId, int delta) {
+        points.merge(playerId, delta, Integer::sum);
     }
 
     public long getAnsweringStartedMs() {

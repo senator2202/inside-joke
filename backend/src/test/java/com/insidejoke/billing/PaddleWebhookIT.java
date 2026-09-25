@@ -51,7 +51,8 @@ class PaddleWebhookIT extends AbstractIntegrationTest {
                         Map.of("totals", Map.of("grand_total", "279"))));
     }
 
-    private static Map<String, Object> refund(String eventId, String txnId, String status, String type) {
+    /** A refund adjustment of transaction txn_c1. */
+    private static Map<String, Object> refund(String eventId, String status, String type) {
         return Map.of(
                 "event_id",
                 eventId,
@@ -68,7 +69,7 @@ class PaddleWebhookIT extends AbstractIntegrationTest {
                         "type",
                         type,
                         "transaction_id",
-                        txnId));
+                        "txn_c1"));
     }
 
     /** An adjustment shaped like the ones Paddle sends: top-level type, items with their own type, totals in minor units. */
@@ -186,18 +187,17 @@ class PaddleWebhookIT extends AbstractIntegrationTest {
     void anApprovedFullRefundRevokesThePass() {
         UUID host = newHost();
         deliver(completed("evt_c1", "txn_c1", "pri_party", host));
-        deliver(refund("evt_c2", "txn_c1", "pending_approval", "full"));
-        deliver(refund("evt_c3", "txn_c1", "approved", "partial"));
+        deliver(refund("evt_c2", "pending_approval", "full"));
+        deliver(refund("evt_c3", "approved", "partial"));
         assertThat(count("SELECT count(*) FROM entitlement WHERE user_id = ? AND revoked_at IS NULL", host))
                 .isEqualTo(1);
 
-        deliver(refund("evt_c4", "txn_c1", "approved", "full"));
+        deliver(refund("evt_c4", "approved", "full"));
         assertThat(count("SELECT count(*) FROM purchase WHERE provider_txn_id = 'txn_c1' AND status = 'REFUNDED'"))
                 .isEqualTo(1);
         assertThat(count("SELECT count(*) FROM entitlement WHERE user_id = ? AND revoked_at IS NOT NULL", host))
                 .isEqualTo(1);
-        assertThat(deliver(refund("evt_c5", "txn_c1", "approved", "full")).status())
-                .isEqualTo(200);
+        assertThat(deliver(refund("evt_c5", "approved", "full")).status()).isEqualTo(200);
     }
 
     @Test
@@ -249,7 +249,7 @@ class PaddleWebhookIT extends AbstractIntegrationTest {
                 .query(String.class)
                 .list();
         assertThat(errors).hasSize(3);
-        assertThat(errors.get(0)).contains("unknown price pri_unknown");
+        assertThat(errors.getFirst()).contains("unknown price pri_unknown");
         assertThat(count("SELECT count(*) FROM purchase WHERE provider_txn_id IN ('txn_e1','txn_e2','txn_e3')"))
                 .isZero();
 
@@ -291,7 +291,7 @@ class PaddleWebhookIT extends AbstractIntegrationTest {
             UUID hostId =
                     UUID.fromString(party.host.get("/api/me").json().path("id").asString());
             data.game(hostId, null, clock.instant().minus(Duration.ofDays(1)));
-            party.captain().socket().ok("game.start", Map.of());
+            party.captain().getSocket().ok("game.start", Map.of());
             JsonNode walled = party.screen.state(s -> s.has("paywall"));
             assertThat(walled.path("paywall").asString()).isEqualTo("PAYWALL_FREE_LIMIT");
             assertThat(party.host

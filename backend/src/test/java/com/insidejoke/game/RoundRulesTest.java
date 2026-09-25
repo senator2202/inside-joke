@@ -15,9 +15,9 @@ class RoundRulesTest {
 
     private final GameHarness h = new GameHarness();
 
-    /** Round 1 is played; the party is choosing the kind of round 2. */
-    private GameHarness.Party atRoundTwoVote(int players) {
-        GameHarness.Party party = h.party(players);
+    /** Round 1 is played; a party of three is choosing the kind of round 2. */
+    private GameHarness.Party atRoundTwoVote() {
+        GameHarness.Party party = h.party(3);
         h.toAnswering(party);
         h.skipTo(party, Phase.ROUND_VOTE);
         return party;
@@ -41,7 +41,7 @@ class RoundRulesTest {
 
     @Test
     void fromTheSecondRoundThePartyVotesForFifteenSeconds() {
-        GameHarness.Party party = atRoundTwoVote(3);
+        GameHarness.Party party = atRoundTwoVote();
         assertThat(h.read(party.room(), RoomState::getRoundNumber)).isEqualTo(2);
         assertThat(h.read(party.room(), RoomState::getDeadlineMs)).isEqualTo(h.clock.millis() + 15_000);
 
@@ -60,7 +60,7 @@ class RoundRulesTest {
 
     @Test
     void aVoteCanBeChangedUntilTheTimerEnds() {
-        GameHarness.Party party = atRoundTwoVote(3);
+        GameHarness.Party party = atRoundTwoVote();
         vote(party, party.seat(0), RoundKind.WHO_OF_US);
         vote(party, party.seat(0), RoundKind.TRUTH_OR_AI);
         assertThat(h.view(party, party.seat(0)).kindVote().myKind()).isEqualTo(RoundKind.TRUTH_OR_AI);
@@ -70,7 +70,7 @@ class RoundRulesTest {
 
     @Test
     void aTieGoesToTheKindPlayedLeast() {
-        GameHarness.Party party = atRoundTwoVote(3);
+        GameHarness.Party party = atRoundTwoVote();
         vote(party, party.seat(0), RoundKind.ANSWER_DUEL);
         vote(party, party.seat(1), RoundKind.WHO_OF_US);
         h.expire(party.room());
@@ -79,14 +79,14 @@ class RoundRulesTest {
 
     @Test
     void whenNobodyVotesTheHostPicksAKindPlayedLeast() {
-        GameHarness.Party party = atRoundTwoVote(3);
+        GameHarness.Party party = atRoundTwoVote();
         h.owner(party, "game.next");
         assertThat(h.round(party).getKind()).isIn(RoundKind.WHO_OF_US, RoundKind.TRUTH_OR_AI);
     }
 
     @Test
     void onlyPlayersVoteAndOnlyForAKindThatExists() {
-        GameHarness.Party party = atRoundTwoVote(3);
+        GameHarness.Party party = atRoundTwoVote();
         assertThat(h.send(party, party.seat(0), "round.kind.vote", Map.of("kind", "DANCE_OFF"))
                         .error())
                 .isEqualTo(ErrorCode.VALIDATION_FAILED);

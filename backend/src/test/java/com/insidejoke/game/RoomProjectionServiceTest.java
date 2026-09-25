@@ -2,6 +2,7 @@ package com.insidejoke.game;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.insidejoke.game.dto.AssignmentDto;
 import com.insidejoke.game.dto.OptionDto;
 import com.insidejoke.game.dto.RoomStateDto;
 import java.util.Map;
@@ -25,9 +26,9 @@ class RoomProjectionServiceTest {
                         "dossier.add",
                         Map.of("aboutPlayerId", party.seat(1).id(), "text", "Owns forty cacti"))
                 .ok();
-        assertThat(h.everyonesViews(party.room())).doesNotContain("forty cacti");
+        assertThat(h.allViews(party.room())).doesNotContain("forty cacti");
         h.toAnswering(party);
-        assertThat(h.everyonesViews(party.room())).doesNotContain("forty cacti");
+        assertThat(h.allViews(party.room())).doesNotContain("forty cacti");
         assertThat(h.view(party.room(), party.owner()).secrets()).isEqualTo(1);
     }
 
@@ -37,7 +38,7 @@ class RoomProjectionServiceTest {
         h.toAnswering(party);
         for (GameHarness.Seat seat : party.seats()) {
             assertThat(h.view(party, seat).you().assignments())
-                    .extracting(a -> a.duelId())
+                    .extracting(AssignmentDto::duelId)
                     .containsExactlyInAnyOrderElementsOf(h.duelsOf(party, seat).stream()
                             .map(DuelState::getId)
                             .toList());
@@ -116,7 +117,7 @@ class RoomProjectionServiceTest {
         assertThat(onStream.players()).isNull();
         assertThat(onStream.secrets()).isNull();
         assertThat(onStream.lobby()).isNull();
-        assertThat(h.everyonesViews(party.room()).split("\n"))
+        assertThat(h.allViews(party.room()).split("\n"))
                 .as("the code reaches only the owner's screen and the players' phones")
                 .filteredOn(v -> v.contains("\"role\":\"SCREEN\"") || v.contains("\"role\":\"AUDIENCE\""))
                 .noneMatch(v -> v.contains(code));

@@ -21,6 +21,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -273,9 +274,9 @@ class AdminPassesIT extends AbstractIntegrationTest {
                         "Paddle-Signature",
                         PaddleSignatureUtils.sign(body, "pdl_ntfset_test_secret", clock.instant()));
 
-        JsonNode row =
-                find(admin.get("/api/admin/webhooks/not-applied?size=100").json(), eventId);
-        assertThat(row).as("listed while the customer still has the pass").isNotNull();
+        JsonNode row = find(
+                        admin.get("/api/admin/webhooks/not-applied?size=100").json(), eventId)
+                .orElseThrow(() -> new AssertionError("listed while the customer still has the pass"));
         assertThat(row.path("reason").asString()).isEqualTo("PARTIAL");
         assertThat(row.path("detail").asString()).contains("1.00 USD of 2.99 USD");
         assertThat(row.path("action").asString()).isEqualTo("refund");
@@ -286,22 +287,23 @@ class AdminPassesIT extends AbstractIntegrationTest {
         admin.post("/api/admin/passes/" + pass.id() + "/revoke", Map.of());
         assertThat(find(admin.get("/api/admin/webhooks/not-applied?size=100").json(), eventId))
                 .as("resolved by hand")
-                .isNull();
+                .isEmpty();
         JsonNode all = find(
-                admin.get("/api/admin/webhooks/not-applied?stillHeld=false&size=100")
-                        .json(),
-                eventId);
+                        admin.get("/api/admin/webhooks/not-applied?stillHeld=false&size=100")
+                                .json(),
+                        eventId)
+                .orElseThrow();
         assertThat(all.path("passHeld").asBoolean()).isFalse();
         assertThat(admin.get("/api/admin/webhooks/not-applied?size=0").errorCode())
                 .isEqualTo("VALIDATION_FAILED");
     }
 
-    private static JsonNode find(JsonNode page, String eventId) {
+    private static Optional<JsonNode> find(JsonNode page, String eventId) {
         for (JsonNode row : page.path("items")) {
             if (row.path("eventId").asString().equals(eventId)) {
-                return row;
+                return Optional.of(row);
             }
         }
-        return null;
+        return Optional.empty();
     }
 }

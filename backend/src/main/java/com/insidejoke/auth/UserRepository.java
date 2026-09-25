@@ -11,11 +11,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class UserRepository {
+
+    private static final RowMapper<UserEntity> ROW_MAPPER = (rs, rowNum) -> map(rs);
 
     private static final String COLUMNS = "id, email, display_name, google_sub, role, created_at, last_login_at";
 
@@ -28,21 +31,21 @@ public class UserRepository {
     public Optional<UserEntity> findActiveById(UUID id) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM app_user WHERE id = ? AND deleted_at IS NULL")
                 .param(id)
-                .query(UserRepository::map)
+                .query(ROW_MAPPER)
                 .optional();
     }
 
     public Optional<UserEntity> findActiveByEmail(String email) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM app_user WHERE lower(email) = lower(?) AND deleted_at IS NULL")
                 .param(email)
-                .query(UserRepository::map)
+                .query(ROW_MAPPER)
                 .optional();
     }
 
     public Optional<UserEntity> findActiveByGoogleSub(String sub) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM app_user WHERE google_sub = ? AND deleted_at IS NULL")
                 .param(sub)
-                .query(UserRepository::map)
+                .query(ROW_MAPPER)
                 .optional();
     }
 
@@ -51,7 +54,7 @@ public class UserRepository {
                         + "ORDER BY created_at DESC LIMIT ?")
                 .param("%" + fragment.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%")
                 .param(limit)
-                .query(UserRepository::map)
+                .query(ROW_MAPPER)
                 .list();
     }
 
@@ -65,7 +68,7 @@ public class UserRepository {
                 .param(role)
                 .param(DbUtils.ts(now))
                 .param(DbUtils.ts(now))
-                .query(UserRepository::map)
+                .query(ROW_MAPPER)
                 .single();
     }
 
@@ -78,7 +81,7 @@ public class UserRepository {
                 .param(googleSub)
                 .param(role)
                 .param(id)
-                .query(UserRepository::map)
+                .query(ROW_MAPPER)
                 .single();
     }
 
@@ -109,7 +112,7 @@ public class UserRepository {
                 .update();
     }
 
-    static UserEntity map(ResultSet rs, int row) throws SQLException {
+    static UserEntity map(ResultSet rs) throws SQLException {
         return new UserEntity(
                 DbUtils.uuid(rs, "id"),
                 rs.getString("email"),

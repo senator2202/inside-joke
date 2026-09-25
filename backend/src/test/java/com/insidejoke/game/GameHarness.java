@@ -70,7 +70,6 @@ final class GameHarness {
                 registry,
                 props,
                 settings,
-                app,
                 clock,
                 timers,
                 background,
@@ -337,7 +336,7 @@ final class GameHarness {
     }
 
     /** Every member's view serialized, to check that something reaches nobody. */
-    String everyonesViews(RoomState room) {
+    String allViews(RoomState room) {
         List<Member> members = read(room, r -> List.copyOf(r.getMembers().values()));
         StringBuilder all = new StringBuilder();
         for (Member m : members) {

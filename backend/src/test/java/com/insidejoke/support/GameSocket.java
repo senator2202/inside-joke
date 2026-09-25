@@ -7,15 +7,20 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.MissingNode;
 
 /** A test WebSocket client speaking the game protocol. Keeps every frame for later assertions. */
 public final class GameSocket implements AutoCloseable {
+
+    /** One client for every test socket: each is only a WebSocket on it, and the test JVM ends with the client. */
+    private static final HttpClient HTTP = HttpClient.newHttpClient();
 
     private final JsonMapper json;
     private final List<JsonNode> frames = new CopyOnWriteArrayList<>();
@@ -50,8 +55,7 @@ public final class GameSocket implements AutoCloseable {
                 return null;
             }
         };
-        this.socket = HttpClient.newHttpClient()
-                .newWebSocketBuilder()
+        this.socket = HTTP.newWebSocketBuilder()
                 .header("Origin", origin)
                 .connectTimeout(Duration.ofSeconds(5))
                 .buildAsync(URI.create("ws://localhost:" + port + "/ws"), listener)
@@ -112,12 +116,11 @@ public final class GameSocket implements AutoCloseable {
     }
 
     /** Sends a request and asserts it succeeded. */
-    public JsonNode ok(String type, Object data) {
+    public void ok(String type, Object data) {
         JsonNode reply = request(type, data);
         if (!"ok".equals(reply.path("type").asString())) {
             throw new AssertionError(type + " failed: " + reply);
         }
-        return reply.path("data");
     }
 
     /** Sends a request and returns the error code it failed with. */
@@ -134,7 +137,7 @@ public final class GameSocket implements AutoCloseable {
         try {
             return Await.value("state matching condition", () -> {
                 JsonNode latest = latest();
-                return latest != null && condition.test(latest) ? latest : null;
+                return !latest.isMissingNode() && condition.test(latest) ? latest : null;
             });
         } catch (AssertionError e) {
             String latest = String.valueOf(latest());
@@ -155,13 +158,14 @@ public final class GameSocket implements AutoCloseable {
                 .toList();
     }
 
+    /** The newest state snapshot, or a missing node before the first one. */
     public JsonNode latest() {
         for (int i = frames.size() - 1; i >= 0; i--) {
             if ("state".equals(frames.get(i).path("type").asString())) {
                 return frames.get(i).path("data");
             }
         }
-        return null;
+        return MissingNode.getInstance();
     }
 
     public boolean received(String type) {
@@ -176,10 +180,24 @@ public final class GameSocket implements AutoCloseable {
         return closeCode;
     }
 
+    /** Opens a socket from {@code origin} and closes it at once; throws when the server refuses the handshake. */
+    public static void checkHandshake(int port, JsonMapper json, String origin) {
+        try (GameSocket socket = new GameSocket(port, json, origin)) {
+            socket.abort();
+        }
+    }
+
+    /** Says goodbye if the connection is still open; a connection the server already ended is just dropped. */
     @Override
     public void close() {
-        if (!socket.isOutputClosed()) {
+        if (closeCode != null || socket.isOutputClosed()) {
+            socket.abort();
+            return;
+        }
+        try {
             socket.sendClose(WebSocket.NORMAL_CLOSURE, "bye").join();
+        } catch (CompletionException e) {
+            socket.abort();
         }
     }
 

@@ -2,6 +2,7 @@ package com.insidejoke.game;
 
 import com.insidejoke.common.ApiException;
 import com.insidejoke.common.ErrorCode;
+import java.io.Serial;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -56,6 +57,7 @@ final class RequestHistoryState {
 
     private static Map<String, Call> recentCalls() {
         return new LinkedHashMap<>() {
+            @Serial
             private static final long serialVersionUID = 1L;
 
             @Override

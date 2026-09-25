@@ -105,6 +105,8 @@ public class RoomController {
         return new AudienceTokenDto(engine.joinAudience(room));
     }
 
+    // The endpoint serves a fixed list, so of course it always returns the same value.
+    @SuppressWarnings("SameReturnValue")
     @GetMapping("/api/rooms/emojis")
     public List<String> emojis() {
         return GameEngineService.EMOJIS;

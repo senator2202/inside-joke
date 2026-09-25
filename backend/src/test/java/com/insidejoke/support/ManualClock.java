@@ -5,14 +5,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** A clock that stands still until a test moves it: timers are tested without waiting in real time. */
 public final class ManualClock extends Clock {
 
-    private volatile Instant now;
+    private final AtomicReference<Instant> now;
 
     public ManualClock(Instant start) {
-        this.now = start;
+        this.now = new AtomicReference<>(start);
     }
 
     public ManualClock() {
@@ -31,17 +32,15 @@ public final class ManualClock extends Clock {
 
     @Override
     public Instant instant() {
-        return now;
+        return now.get();
     }
 
     public void advance(Duration by) {
-        now = now.plus(by);
+        now.updateAndGet(t -> t.plus(by));
     }
 
     /** Moves the clock to {@code millis}; never backwards. */
     public void setMillis(long millis) {
-        if (millis > now.toEpochMilli()) {
-            now = Instant.ofEpochMilli(millis);
-        }
+        now.updateAndGet(t -> millis > t.toEpochMilli() ? Instant.ofEpochMilli(millis) : t);
     }
 }

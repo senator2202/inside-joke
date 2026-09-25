@@ -89,7 +89,7 @@ final class FinalePhaseHandler {
     List<PlayerState> standings(RoomState r) {
         return r.activePlayers().stream()
                 .sorted(Comparator.comparingInt((PlayerState p) -> -p.getScore())
-                        .thenComparing(p -> p.getJoinedAt()))
+                        .thenComparing(PlayerState::getJoinedAt))
                 .toList();
     }
 
@@ -113,10 +113,10 @@ final class FinalePhaseHandler {
                 players,
                 p -> p.getFastestAnswerMs() == Long.MAX_VALUE ? 0 : Long.MAX_VALUE - p.getFastestAnswerMs(),
                 "fastest");
-        assignTitle(r.getSettings().language(), titles, players, p -> p.getPeopleFooled(), "fooler");
-        assignTitle(r.getSettings().language(), titles, players, p -> p.getCorrectGuesses(), "detective");
-        assignTitle(r.getSettings().language(), titles, players, p -> p.getWhoPicks(), "whoMagnet");
-        assignTitle(r.getSettings().language(), titles, players, p -> p.getVotesReceived(), "votes");
+        assignTitle(r.getSettings().language(), titles, players, PlayerState::getPeopleFooled, "fooler");
+        assignTitle(r.getSettings().language(), titles, players, PlayerState::getCorrectGuesses, "detective");
+        assignTitle(r.getSettings().language(), titles, players, PlayerState::getWhoPicks, "whoMagnet");
+        assignTitle(r.getSettings().language(), titles, players, PlayerState::getVotesReceived, "votes");
         List<String> generic =
                 new ArrayList<>(fallback.genericTitles(r.getSettings().language()));
         Collections.shuffle(generic, random);
@@ -130,7 +130,7 @@ final class FinalePhaseHandler {
                 " and ",
                 players.stream()
                         .filter(p -> p.getScore() == players.getFirst().getScore())
-                        .map(p -> p.getName())
+                        .map(PlayerState::getName)
                         .toList());
         return new Finale(titles, runtime.line(r, "finaleSpeech", Map.of("winner", winnerNames)), "FALLBACK");
     }

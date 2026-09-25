@@ -74,7 +74,7 @@ public class SmtpMailClient implements MailClient {
         return mailer;
     }
 
-    /** Google shows app passwords in groups of four ("abcd efgh ijkl mnop"); the spaces are not part of them. */
+    /** Google shows app passwords as four groups of four letters with spaces between; the spaces are not part of them. */
     static String password(MailProperties.Smtp smtp) {
         String host = smtp.host().toLowerCase(Locale.ROOT);
         boolean google = host.endsWith("gmail.com") || host.endsWith("googlemail.com");
@@ -117,7 +117,8 @@ public class SmtpMailClient implements MailClient {
     static String describe(Throwable e) {
         String first = null;
         String deepest = null;
-        for (Throwable t = e; t != null; t = t.getCause()) {
+        Throwable t = e;
+        do {
             if (t.getMessage() != null && !t.getMessage().isBlank()) {
                 String m = t.getMessage().replaceAll("\\s+", " ").trim();
                 if (first == null) {
@@ -125,7 +126,8 @@ public class SmtpMailClient implements MailClient {
                 }
                 deepest = m;
             }
-        }
+            t = t.getCause();
+        } while (t != null);
         String text = first == null
                 ? e.getClass().getSimpleName()
                 : deepest.equals(first) || first.contains(deepest) ? first : first + " (" + deepest + ")";
