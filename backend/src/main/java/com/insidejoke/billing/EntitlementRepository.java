@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -35,20 +36,25 @@ public class EntitlementRepository {
     }
 
     private EntitlementEntity insert(
-            UUID userId, UUID purchaseId, Product type, Instant startsAt, Instant endsAt, UUID grantedBy, Instant now) {
+            UUID userId,
+            @Nullable UUID purchaseId,
+            Product type,
+            Instant startsAt,
+            Instant endsAt,
+            @Nullable UUID grantedBy,
+            Instant now) {
         return jdbc.sql("INSERT INTO entitlement (user_id, purchase_id, type, starts_at, ends_at, monthly_game_limit, "
                         + "is_granted_by_admin, granted_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING "
                         + COLUMNS)
-                .params(
-                        userId,
-                        purchaseId,
-                        type.name(),
-                        DbUtils.ts(startsAt),
-                        DbUtils.ts(endsAt),
-                        type.monthlyGameLimit(),
-                        purchaseId == null,
-                        grantedBy,
-                        DbUtils.ts(now))
+                .param(userId)
+                .param(purchaseId)
+                .param(type.name())
+                .param(DbUtils.ts(startsAt))
+                .param(DbUtils.ts(endsAt))
+                .param(type.monthlyGameLimit())
+                .param(purchaseId == null)
+                .param(grantedBy)
+                .param(DbUtils.ts(now))
                 .query(EntitlementRepository::map)
                 .single();
     }
@@ -84,10 +90,13 @@ public class EntitlementRepository {
     }
 
     /** Ends a pass now; {@code by} is the admin who did it, or null when it follows from something else. */
-    public int revoke(UUID id, Instant now, RevokeReason reason, UUID by) {
+    public int revoke(UUID id, Instant now, RevokeReason reason, @Nullable UUID by) {
         return jdbc.sql(
                         "UPDATE entitlement SET revoked_at = ?, revoke_reason = ?, revoked_by = ? WHERE id = ? AND revoked_at IS NULL")
-                .params(DbUtils.ts(now), reason.name(), by, id)
+                .param(DbUtils.ts(now))
+                .param(reason.name())
+                .param(by)
+                .param(id)
                 .update();
     }
 

@@ -3,6 +3,7 @@ package com.insidejoke.moderation;
 import com.insidejoke.common.DbUtils;
 import java.time.Instant;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -17,10 +18,18 @@ public class ModerationEventRepository {
     }
 
     public void insert(
-            UUID gameSessionId, ModerationStage stage, String category, ModerationAction action, Instant now) {
+            @Nullable UUID gameSessionId,
+            ModerationStage stage,
+            String category,
+            ModerationAction action,
+            Instant now) {
         jdbc.sql(
                         "INSERT INTO moderation_event (game_session_id, stage, category, action, created_at) VALUES (?, ?, ?, ?, ?)")
-                .params(gameSessionId, stage.name(), category, action.name(), DbUtils.ts(now))
+                .param(gameSessionId)
+                .param(stage.name())
+                .param(category)
+                .param(action.name())
+                .param(DbUtils.ts(now))
                 .update();
     }
 }

@@ -31,21 +31,20 @@ public class AiCallRepository {
                         "INSERT INTO ai_call (game_session_id, purpose, provider, model, prompt_version, input_tokens, output_tokens, "
                                 + "tts_chars, cost_micros, latency_ms, outcome, is_free, error, created_at) "
                                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-                .params(
-                        r.gameSessionId(),
-                        r.purpose().name(),
-                        r.provider(),
-                        r.model(),
-                        r.promptVersion(),
-                        r.inputTokens(),
-                        r.outputTokens(),
-                        r.ttsChars(),
-                        r.costMicros(),
-                        r.latencyMs(),
-                        r.outcome().name(),
-                        r.freeGame(),
-                        error,
-                        DbUtils.ts(now))
+                .param(r.gameSessionId())
+                .param(r.purpose().name())
+                .param(r.provider())
+                .param(r.model())
+                .param(r.promptVersion())
+                .param(r.inputTokens())
+                .param(r.outputTokens())
+                .param(r.ttsChars())
+                .param(r.costMicros())
+                .param(r.latencyMs())
+                .param(r.outcome().name())
+                .param(r.freeGame())
+                .param(error)
+                .param(DbUtils.ts(now))
                 .update();
     }
 

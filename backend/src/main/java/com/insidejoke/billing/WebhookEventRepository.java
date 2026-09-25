@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -47,10 +48,20 @@ public class WebhookEventRepository {
 
     /** Records that an event was handled, what came of it and, when something was not applied, why. */
     public void markProcessed(
-            String provider, String eventId, Instant now, Outcome outcome, String reason, String detail) {
+            String provider,
+            String eventId,
+            Instant now,
+            Outcome outcome,
+            @Nullable String reason,
+            @Nullable String detail) {
         jdbc.sql("UPDATE webhook_event SET processed_at = ?, last_error = NULL, outcome = ?, reason = ?, detail = ? "
                         + "WHERE provider = ? AND event_id = ?")
-                .params(DbUtils.ts(now), outcome.name(), reason, clip(detail), provider, eventId)
+                .param(DbUtils.ts(now))
+                .param(outcome.name())
+                .param(reason)
+                .param(clip(detail))
+                .param(provider)
+                .param(eventId)
                 .update();
     }
 
@@ -85,7 +96,7 @@ public class WebhookEventRepository {
                 .update();
     }
 
-    private static String clip(String text) {
+    private static @Nullable String clip(@Nullable String text) {
         return text == null || text.length() <= 1000 ? text : text.substring(0, 1000);
     }
 

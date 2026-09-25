@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -54,18 +55,29 @@ public class UserRepository {
                 .list();
     }
 
-    public UserEntity insert(String email, String displayName, String googleSub, String role, Instant now) {
+    public UserEntity insert(
+            String email, @Nullable String displayName, @Nullable String googleSub, String role, Instant now) {
         return jdbc.sql("INSERT INTO app_user (email, display_name, google_sub, role, created_at, last_login_at) "
                         + "VALUES (?, ?, ?, ?, ?, ?) RETURNING " + COLUMNS)
-                .params(email, displayName, googleSub, role, DbUtils.ts(now), DbUtils.ts(now))
+                .param(email)
+                .param(displayName)
+                .param(googleSub)
+                .param(role)
+                .param(DbUtils.ts(now))
+                .param(DbUtils.ts(now))
                 .query(UserRepository::map)
                 .single();
     }
 
-    public UserEntity recordLogin(UUID id, String displayName, String googleSub, String role, Instant now) {
+    public UserEntity recordLogin(
+            UUID id, @Nullable String displayName, @Nullable String googleSub, String role, Instant now) {
         return jdbc.sql("UPDATE app_user SET last_login_at = ?, display_name = COALESCE(display_name, ?), "
                         + "google_sub = COALESCE(google_sub, ?), role = ? WHERE id = ? RETURNING " + COLUMNS)
-                .params(DbUtils.ts(now), displayName, googleSub, role, id)
+                .param(DbUtils.ts(now))
+                .param(displayName)
+                .param(googleSub)
+                .param(role)
+                .param(id)
                 .query(UserRepository::map)
                 .single();
     }
