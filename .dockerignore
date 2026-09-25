@@ -1,0 +1,13 @@
+# Only sources go into the build context: dependencies and build output are rebuilt inside the image.
+.git
+.github
+.idea
+.run
+**/node_modules
+**/target
+frontend/dist
+frontend/coverage
+**/*.log
+.env
+.env.*
+!.env.example

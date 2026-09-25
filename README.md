@@ -200,6 +200,19 @@ npm run format:check
 ## Сборка и деплой
 
 - Артефакт: `backend/target/inside-joke.jar` (фронтенд внутри). Запуск: `java -jar inside-joke.jar`.
+- **Образ Docker** (`Dockerfile`): внутри тот же jar и JRE 21, запуск от непривилегированного пользователя, порт 8080,
+  проверка здоровья — `GET /actuator/health`. Тесты при сборке образа не запускаются — это делает CI.
+  ```bash
+  docker build -t inside-joke .
+  docker run --env-file .env -p 8080:8080 inside-joke
+  ```
+  Всё приложение с базой локально: `docker compose --profile app up -d --build` (профиль `local`, адрес
+  http://localhost:8080; настройки из `.env`, если он есть). Без `--profile app` compose по-прежнему поднимает только
+  базу.
+- **CI** (`.github/workflows/ci.yml`, GitHub Actions): на каждый push в `main` и `develop` и на каждый pull request —
+  `./mvnw -B verify` и сборка образа. Отчёты тестов (при падении) и покрытия — в артефактах запуска. Чтобы проверка
+  была обязательной для слияния: **Settings → Branches → Add branch protection rule** для `main` (и `develop`) →
+  **Require status checks to pass** → отметить `verify`.
 - Все настройки — переменные окружения, полный список с пояснениями в `.env.example`. В продакшене обязательно
   `APP_COOKIE_SECURE=true` (по умолчанию), `APP_PUBLIC_URL=https://…`, `AI_REQUIRE_LLM_MODERATION=true`.
 - **Paddle:** URL вебхука `https://<домен>/api/webhooks/paddle`, события `transaction.completed`, `adjustment.created`,

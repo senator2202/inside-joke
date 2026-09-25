@@ -1,4 +1,5 @@
 # Local PostgreSQL for development: docker compose up -d
+# The whole app in Docker as well (built from the Dockerfile): docker compose --profile app up -d --build
 # Matches the defaults in .env.example. Tests don't need it (they start an embedded PostgreSQL).
 services:
   db:
@@ -16,6 +17,26 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # The app itself, only with --profile app. Settings come from .env (copy .env.example); the database is the one above.
+  # The "local" profile keeps development defaults (sign-in codes in the log, cookies over plain http).
+  app:
+    profiles: ["app"]
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      DATABASE_URL: jdbc:postgresql://db:5432/insidejoke
+      DATABASE_USER: insidejoke
+      DATABASE_PASSWORD: insidejoke
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:8080}
+    ports:
+      - "8080:8080"
 
 volumes:
   insidejoke-db:
