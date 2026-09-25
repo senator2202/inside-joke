@@ -2,7 +2,6 @@ package com.insidejoke.game;
 
 import com.insidejoke.common.Language;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -146,9 +145,5 @@ final class FinalePhaseHandler {
                 .filter(p -> !titles.containsKey(p.getId()) && metric.applyAsLong(p) > 0)
                 .max(Comparator.comparingLong(metric))
                 .ifPresent(p -> titles.put(p.getId(), fallback.title(language, kind)));
-    }
-
-    Collection<Member> membersOf(RoomState r) {
-        return r.getMembers().values();
     }
 }

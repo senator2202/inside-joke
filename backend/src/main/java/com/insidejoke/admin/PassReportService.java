@@ -104,10 +104,6 @@ public class PassReportService {
         return Arrays.stream(type.getEnumConstants()).map(Enum::name).sorted().collect(Collectors.joining(", "));
     }
 
-    private static String upper(String s) {
-        return s == null || s.isBlank() ? null : s.trim().toUpperCase(Locale.ROOT);
-    }
-
     private static PassLogRepository.Sort sort(String sort) {
         String key = sort == null ? "created" : sort.trim().toLowerCase(Locale.ROOT);
         for (PassLogRepository.Sort s : PassLogRepository.Sort.values()) {

@@ -16,11 +16,6 @@ public enum AdjustmentStatus {
         this.wire = wire;
     }
 
-    /** The value as Paddle sends it. */
-    public String wire() {
-        return wire;
-    }
-
     public static AdjustmentStatus fromWire(String value) {
         return Arrays.stream(values())
                 .filter(v -> v.wire != null && v.wire.equals(value))

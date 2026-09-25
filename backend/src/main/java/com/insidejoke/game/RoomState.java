@@ -128,10 +128,6 @@ public final class RoomState {
         }
     }
 
-    boolean heldByCurrentThread() {
-        return lock.isHeldByCurrentThread();
-    }
-
     String nextId(String prefix) {
         idCounter++;
         return prefix + idCounter;
@@ -618,9 +614,5 @@ public final class RoomState {
 
     public void setTickAtMs(long tickAtMs) {
         this.tickAtMs = tickAtMs;
-    }
-
-    public int getIdCounter() {
-        return idCounter;
     }
 }

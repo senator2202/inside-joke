@@ -16,9 +16,4 @@ public record EntitlementEntity(
         Instant createdAt,
         UUID grantedBy,
         UUID revokedBy,
-        RevokeReason revokeReason) {
-
-    public boolean activeAt(Instant now) {
-        return revokedAt == null && !startsAt.isAfter(now) && endsAt.isAfter(now);
-    }
-}
+        RevokeReason revokeReason) {}

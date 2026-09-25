@@ -82,9 +82,9 @@ public class PurchaseRepository {
 
     /** Completed purchases in [from, to), summed per currency, largest first. */
     public List<Money> revenue(Instant from, Instant to) {
-        return jdbc.sql("SELECT currency, sum(amount_minor) FROM purchase WHERE status = "
+        return jdbc.sql("SELECT currency, sum(amount_minor) AS total FROM purchase WHERE status = "
                         + DbUtils.sql(PurchaseStatus.COMPLETED) + " "
-                        + "AND created_at >= ? AND created_at < ? GROUP BY currency ORDER BY 2 DESC")
+                        + "AND created_at >= ? AND created_at < ? GROUP BY currency ORDER BY total DESC")
                 .params(DbUtils.ts(from), DbUtils.ts(to))
                 .query((rs, n) -> Money.of(rs.getLong(2), rs.getString(1)))
                 .list();

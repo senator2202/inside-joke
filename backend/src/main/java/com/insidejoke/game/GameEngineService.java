@@ -583,13 +583,6 @@ public class GameEngineService implements GameRuntimeService {
         return next;
     }
 
-    /** Runs every room's timers now; the scheduler normally does this, tests call it after moving the clock. */
-    public void tickAll() {
-        for (RoomState room : List.copyOf(registry.all())) {
-            mutate(room, this::tick);
-        }
-    }
-
     void tick(RoomState r) {
         if (r.getPhase() == Phase.CLOSED) {
             return;

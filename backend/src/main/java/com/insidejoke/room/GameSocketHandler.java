@@ -200,8 +200,4 @@ public class GameSocketHandler extends TextWebSocketHandler {
         out.put("data", data);
         return out;
     }
-
-    int openConnections() {
-        return connections.size();
-    }
 }

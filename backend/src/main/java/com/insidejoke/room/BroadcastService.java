@@ -67,11 +67,6 @@ public class BroadcastService implements RoomEventListener {
         }
     }
 
-    int connectionCount(String code) {
-        BroadcastState state = rooms.get(code);
-        return state == null ? 0 : state.connections.size();
-    }
-
     /** Sends the current snapshot to one connection right away (after hello). */
     void sendNow(ConnectionHandler c) {
         String payload = c.room.call(r -> envelope(projector().project(r, c.member)));

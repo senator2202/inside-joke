@@ -89,10 +89,12 @@ public class WebhookEventRepository {
                 .optional();
     }
 
-    public void markFailed(String provider, String eventId, String error) {
+    public void markFailed(String provider, String eventId, @Nullable String error) {
         jdbc.sql("UPDATE webhook_event SET last_error = ?, outcome = " + DbUtils.sql(Outcome.FAILED)
                         + " WHERE provider = ? AND event_id = ?")
-                .params(clip(error), provider, eventId)
+                .param(clip(error))
+                .param(provider)
+                .param(eventId)
                 .update();
     }
 
@@ -126,12 +128,16 @@ public class WebhookEventRepository {
     private static final String NOT_APPLIED_FROM = " FROM webhook_event w "
             + "LEFT JOIN purchase p ON p.provider_txn_id = w.payload->'data'->>'transaction_id' "
             + "LEFT JOIN app_user u ON u.id = p.user_id LEFT JOIN entitlement e ON e.purchase_id = p.id WHERE w.outcome = "
-            + DbUtils.sql(Outcome.NOT_APPLIED) + "";
+            + DbUtils.sql(Outcome.NOT_APPLIED);
     private static final String STILL_HELD = " AND e.id IS NOT NULL AND e.revoked_at IS NULL AND e.ends_at > ?";
+
+    private static String notAppliedFrom(boolean onlyStillHeld) {
+        return onlyStillHeld ? NOT_APPLIED_FROM + STILL_HELD : NOT_APPLIED_FROM;
+    }
 
     public long countNotApplied(boolean onlyStillHeld, Instant now) {
         List<Object> params = onlyStillHeld ? List.of(DbUtils.ts(now)) : List.of();
-        return jdbc.sql("SELECT count(*)" + NOT_APPLIED_FROM + (onlyStillHeld ? STILL_HELD : ""))
+        return jdbc.sql("SELECT count(*)" + notAppliedFrom(onlyStillHeld))
                 .params(params)
                 .query(Long.class)
                 .single();
@@ -149,8 +155,7 @@ public class WebhookEventRepository {
                         + "w.payload->'data'->>'status' AS status, w.payload->'data'->>'transaction_id' AS txn_id, w.reason, w.detail, "
                         + "p.id AS purchase_id, p.product, p.amount_minor, p.currency, p.status AS "
                         + "purchase_status, u.id AS user_id, u.email, "
-                        + "e.id AS pass_id, e.revoked_at, e.ends_at" + NOT_APPLIED_FROM
-                        + (onlyStillHeld ? STILL_HELD : "")
+                        + "e.id AS pass_id, e.revoked_at, e.ends_at" + notAppliedFrom(onlyStillHeld)
                         + " ORDER BY w.received_at DESC, w.event_id LIMIT ? OFFSET ?")
                 .params(params)
                 .query((rs, n) -> new NotAppliedEvent(

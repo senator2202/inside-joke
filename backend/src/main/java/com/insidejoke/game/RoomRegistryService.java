@@ -94,8 +94,4 @@ public class RoomRegistryService {
                 .filter(r -> r.getOwnerUserId().equals(userId))
                 .toList();
     }
-
-    public int size() {
-        return rooms.size();
-    }
 }

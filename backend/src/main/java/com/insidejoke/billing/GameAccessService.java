@@ -60,10 +60,6 @@ public class GameAccessService implements GameAccessPort {
         this.clock = clock;
     }
 
-    public Decision decide(UUID hostUserId) {
-        return evaluate(hostUserId, clock.instant()).decision();
-    }
-
     /**
      * Checks access and records the game in one transaction. A per-host advisory lock makes two simultaneous
      * starts (two rooms, or a double click) see each other, so one free game cannot be spent twice.

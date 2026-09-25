@@ -80,10 +80,6 @@ public final class PlayerState {
         return id;
     }
 
-    public String getToken() {
-        return token;
-    }
-
     public Instant getJoinedAt() {
         return joinedAt;
     }

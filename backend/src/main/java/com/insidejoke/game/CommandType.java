@@ -38,11 +38,6 @@ public enum CommandType {
         this.action = action;
     }
 
-    /** The name in the protocol ({@code game.start}). */
-    public String wire() {
-        return wire;
-    }
-
     /** The permission the sender needs, or empty when the handler decides. */
     public Optional<Action> action() {
         return Optional.ofNullable(action);

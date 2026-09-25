@@ -68,13 +68,6 @@ public class EntitlementRepository {
                 .list();
     }
 
-    public List<EntitlementEntity> listByUser(UUID userId) {
-        return jdbc.sql("SELECT " + COLUMNS + " FROM entitlement WHERE user_id = ? ORDER BY created_at DESC")
-                .param(userId)
-                .query(EntitlementRepository::map)
-                .list();
-    }
-
     public Optional<EntitlementEntity> findByPurchase(UUID purchaseId) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM entitlement WHERE purchase_id = ?")
                 .param(purchaseId)

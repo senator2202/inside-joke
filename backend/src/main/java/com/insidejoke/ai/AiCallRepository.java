@@ -80,8 +80,8 @@ public class AiCallRepository {
 
     public Map<String, Long> costByPurpose(Instant from, Instant to) {
         Map<String, Long> byPurpose = new LinkedHashMap<>();
-        jdbc.sql("SELECT purpose, sum(cost_micros) FROM ai_call WHERE created_at >= ? AND created_at < "
-                        + "? GROUP BY purpose ORDER BY 2 DESC")
+        jdbc.sql("SELECT purpose, sum(cost_micros) AS cost FROM ai_call WHERE created_at >= ? AND created_at < "
+                        + "? GROUP BY purpose ORDER BY cost DESC")
                 .params(DbUtils.ts(from), DbUtils.ts(to))
                 .query((rs, n) -> byPurpose.put(rs.getString(1), rs.getLong(2)))
                 .list();
@@ -92,7 +92,7 @@ public class AiCallRepository {
         Map<LocalDate, Long> cost = new LinkedHashMap<>();
         jdbc.sql("SELECT (created_at AT TIME ZONE 'UTC')::date, sum(cost_micros) FROM ai_call WHERE "
                         + "created_at >= ? AND created_at < ? "
-                        + "GROUP BY 1")
+                        + "GROUP BY (created_at AT TIME ZONE 'UTC')::date")
                 .params(DbUtils.ts(from), DbUtils.ts(to))
                 .query((rs, n) -> cost.put(rs.getObject(1, LocalDate.class), rs.getLong(2)))
                 .list();
@@ -132,9 +132,7 @@ public class AiCallRepository {
     public Optional<LoggedCall> latestAnthropic(boolean failuresOnly) {
         return jdbc.sql("SELECT c.*, g.room_code FROM ai_call c LEFT JOIN game_session g ON g.id = c.game_session_id "
                         + "WHERE c.provider = '" + AiProvider.ANTHROPIC.wire() + "' AND "
-                        + (failuresOnly
-                                ? "c.outcome IN " + FAILED
-                                : "c.outcome <> " + DbUtils.sql(AiOutcome.FALLBACK) + "")
+                        + (failuresOnly ? "c.outcome IN " + FAILED : "c.outcome <> " + DbUtils.sql(AiOutcome.FALLBACK))
                         + " ORDER BY c.created_at DESC, c.id DESC LIMIT 1")
                 .query(AiCallRepository::logged)
                 .optional();

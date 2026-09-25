@@ -24,7 +24,6 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.springframework.stereotype.Service;
 
 /**
@@ -96,7 +95,7 @@ public class RoomProjectionService {
                     props.maxPlayers());
         }
 
-        RoundDto round = roundView(r, role, me);
+        RoundDto round = roundView(r);
         return new RoomStateDto(
                 r.getVersion(),
                 now,
@@ -115,7 +114,7 @@ public class RoomProjectionService {
                         r.getSettings().language().code()),
                 lobby,
                 role == Role.AUDIENCE ? null : players(r),
-                you(r, m, role, me),
+                you(r, role, me),
                 host(r, m, role),
                 r.getPhase() == Phase.INTAKE || me != null && me.getIntakeGame() == 0 ? intake(r, me) : null,
                 r.getPhase() == Phase.ROUND_VOTE && role != Role.AUDIENCE ? kindVote(r, me) : null,
@@ -184,7 +183,7 @@ public class RoomProjectionService {
         }
     }
 
-    private YouDto you(RoomState r, Member m, Role role, PlayerState me) {
+    private YouDto you(RoomState r, Role role, PlayerState me) {
         if (me == null) {
             return new YouDto(
                     role, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
@@ -270,11 +269,11 @@ public class RoomProjectionService {
         return new KindVoteDto(voters, me == null ? null : r.getKindVotes().get(me.getId()));
     }
 
-    private RoundDto roundView(RoomState r, Role role, PlayerState me) {
+    private RoundDto roundView(RoomState r) {
         RoundState round = r.getRound();
         if (round == null
                 || !(r.getPhase() == Phase.ANSWERING || r.getPhase() == Phase.VOTING || r.getPhase() == Phase.REVEAL)) {
-            return beforeRound(r, role, me);
+            return beforeRound(r);
         }
         boolean reveal = r.getPhase() == Phase.REVEAL;
         VoteStepState step = round.currentVote();
@@ -287,9 +286,9 @@ public class RoomProjectionService {
                 step == null || r.getSettings().mode() != RoomMode.STREAMER ? null : step.audienceTotal(),
                 reveal ? Map.copyOf(round.getPoints()) : null);
         return switch (round.getKind()) {
-            case ANSWER_DUEL -> duelRound(r, role, me, c);
-            case WHO_OF_US -> whoOfUsRound(r, role, me, c);
-            case TRUTH_OR_AI -> truthOrAiRound(r, role, me, c);
+            case ANSWER_DUEL -> duelRound(r, c);
+            case WHO_OF_US -> whoOfUsRound(r, c);
+            case TRUTH_OR_AI -> truthOrAiRound(r, c);
             default -> null;
         };
     }
@@ -305,7 +304,7 @@ public class RoomProjectionService {
             Map<String, Integer> points) {}
 
     /** Before answering starts: the round-kind vote, or nothing. */
-    private RoundDto beforeRound(RoomState r, Role role, PlayerState me) {
+    private RoundDto beforeRound(RoomState r) {
         if (r.getPhase() == Phase.ROUND_VOTE
                 || r.getPhase() == Phase.INTAKE
                 || r.getPending() == RoomState.Pending.ROUND_CONTENT) {
@@ -333,10 +332,9 @@ public class RoomProjectionService {
     }
 
     /** A duel: two answers per prompt, one vote step per duel. */
-    private RoundDto duelRound(RoomState r, Role role, PlayerState me, VoteContext c) {
+    private RoundDto duelRound(RoomState r, VoteContext c) {
         RoundState round = c.round();
         boolean reveal = c.reveal();
-        VoteStepState step = c.step();
         List<String> voters = c.voters();
         Integer eligible = c.eligible();
         Integer audienceTotal = c.audienceTotal();
@@ -427,7 +425,7 @@ public class RoomProjectionService {
     }
 
     /** Who of us: one question, a vote for a player. */
-    private RoundDto whoOfUsRound(RoomState r, Role role, PlayerState me, VoteContext c) {
+    private RoundDto whoOfUsRound(RoomState r, VoteContext c) {
         RoundState round = c.round();
         boolean reveal = c.reveal();
         VoteStepState step = c.step();
@@ -473,7 +471,7 @@ public class RoomProjectionService {
     }
 
     /** Truth or AI: a statement about one player, a vote for truth or fake. */
-    private RoundDto truthOrAiRound(RoomState r, Role role, PlayerState me, VoteContext c) {
+    private RoundDto truthOrAiRound(RoomState r, VoteContext c) {
         RoundState round = c.round();
         boolean reveal = c.reveal();
         VoteStepState step = c.step();
@@ -592,9 +590,5 @@ public class RoomProjectionService {
                 r.getAnswerOfNightAuthor(),
                 f == null ? null : f.speech(),
                 f != null);
-    }
-
-    static Set<Role> screenRoles() {
-        return Set.of(Role.OWNER_SCREEN, Role.SCREEN);
     }
 }

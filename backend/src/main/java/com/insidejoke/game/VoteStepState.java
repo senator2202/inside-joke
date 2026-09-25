@@ -31,10 +31,6 @@ final class VoteStepState {
         return audience.values().stream().mapToInt(Integer::intValue).sum();
     }
 
-    boolean complete() {
-        return votes.keySet().containsAll(eligible);
-    }
-
     // ---------------------------------------------------------------- access
 
     public List<String> getOptions() {

@@ -138,7 +138,7 @@ public class GameSessionRepository {
         Map<String, Integer> reasons = new LinkedHashMap<>();
         jdbc.sql(
                         "SELECT coalesce(end_reason, 'IN_PROGRESS'), count(*) FROM game_session WHERE started_at >= ? AND started_at < ? "
-                                + "GROUP BY 1 ORDER BY 2 DESC")
+                                + "GROUP BY coalesce(end_reason, 'IN_PROGRESS') ORDER BY count(*) DESC")
                 .params(DbUtils.ts(from), DbUtils.ts(to))
                 .query((rs, n) -> reasons.put(rs.getString(1), rs.getInt(2)))
                 .list();
@@ -156,7 +156,7 @@ public class GameSessionRepository {
     public List<DayCount> perDay(Instant from, Instant to) {
         return jdbc.sql(
                         "SELECT (started_at AT TIME ZONE 'UTC')::date, count(*), count(*) FILTER (WHERE NOT is_free) FROM game_session "
-                                + "WHERE started_at >= ? AND started_at < ? GROUP BY 1")
+                                + "WHERE started_at >= ? AND started_at < ? GROUP BY (started_at AT TIME ZONE 'UTC')::date")
                 .params(DbUtils.ts(from), DbUtils.ts(to))
                 .query((rs, n) -> new DayCount(rs.getObject(1, LocalDate.class), rs.getInt(2), rs.getInt(3)))
                 .list();
