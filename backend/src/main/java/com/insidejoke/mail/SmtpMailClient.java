@@ -37,7 +37,7 @@ public class SmtpMailClient implements MailClient {
                     smtp.security(),
                     smtp.authenticates() ? ", as " + smtp.username() : ", no login");
         } else {
-            log.warn("MAIL_PROVIDER=smtp but SMTP_HOST is not set: sign-in emails can't be sent");
+            log.warn("MAIL_PROVIDER=SMTP but SMTP_HOST is not set: sign-in emails can't be sent");
         }
     }
 

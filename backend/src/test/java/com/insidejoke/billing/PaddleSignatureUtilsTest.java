@@ -15,11 +15,11 @@ class PaddleSignatureUtilsTest {
 
     @Test
     void matchesAnIndependentlyComputedHmac() {
-        // python3: hmac.new(b"whsec_known", b'1790000000:{"event_id":"evt_1"}', hashlib.sha256).hexdigest()
-        String expected = "39b446a7192270aa89b201f50536f245808ed592141eff0c9662844277c2d111";
+        // python3: hmac.new(b"known-secret", b'1790000000:{"event_id":"evt_1"}', hashlib.sha256).hexdigest()
+        String expected = "070c3edf92e076d05aaa36055923e9e0fabbae20b1dd92bf4422756f7bd8ac92";
         Instant at = Instant.ofEpochSecond(1_790_000_000L);
-        assertThat(PaddleSignatureUtils.sign(BODY, "whsec_known", at)).isEqualTo("ts=1790000000;h1=" + expected);
-        assertThat(PaddleSignatureUtils.valid("ts=1790000000;h1=" + expected, BODY, "whsec_known", at, TOLERANCE))
+        assertThat(PaddleSignatureUtils.sign(BODY, "known-secret", at)).isEqualTo("ts=1790000000;h1=" + expected);
+        assertThat(PaddleSignatureUtils.valid("ts=1790000000;h1=" + expected, BODY, "known-secret", at, TOLERANCE))
                 .isTrue();
     }
 

@@ -3,6 +3,8 @@
         "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
         "checkstyle-configuration_1_3.dtd">
 <!-- Lint rules for the backend. Focus: correctness and hygiene, not formatting taste. -->
+<!-- Checkstyle module names and our package name are not English words. -->
+<!--suppress SpellCheckingInspection -->
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
     <property name="severity" value="warning"/>

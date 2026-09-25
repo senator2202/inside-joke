@@ -83,7 +83,8 @@ class PaddleWebhookIT extends AbstractIntegrationTest {
             List<String> itemTypes,
             String total) {
         List<Map<String, Object>> items = itemTypes.stream()
-                .map(t -> Map.<String, Object>of("id", "adjitm_" + t + eventId, "item_id", "txnitm_1", "type", t))
+                .map(t -> Map.<String, Object>of(
+                        "id", "adjustment_item_" + t + eventId, "item_id", "transaction_item_1", "type", t))
                 .toList();
         return Map.of(
                 "event_id",

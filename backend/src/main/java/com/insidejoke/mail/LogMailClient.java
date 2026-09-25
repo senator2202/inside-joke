@@ -22,7 +22,7 @@ public class LogMailClient implements MailClient {
         if (!environment.acceptsProfiles(Profiles.of("local"))) {
             throw new IllegalStateException(
                     "MAIL_PROVIDER=log writes sign-in codes to the log and is allowed only with the "
-                            + "local profile (SPRING_PROFILES_ACTIVE=local); use resend or smtp");
+                            + "local profile (SPRING_PROFILES_ACTIVE=local); use resend or SMTP");
         }
     }
 

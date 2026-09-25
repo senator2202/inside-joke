@@ -48,7 +48,9 @@ public class PaddleWebhookController {
 
     @PostMapping("/api/webhooks/paddle")
     public ResponseEntity<Void> receive(
-            @RequestHeader(value = "Paddle-Signature", required = false) String signature,
+            @SuppressWarnings("UastIncorrectHttpHeaderInspection") // Paddle's webhook header
+                    @RequestHeader(value = "Paddle-Signature", required = false)
+                    String signature,
             @RequestBody(required = false) byte[] body) {
         byte[] raw = body == null ? new byte[0] : body;
         Instant now = clock.instant();

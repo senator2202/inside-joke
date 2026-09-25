@@ -125,9 +125,10 @@ class NamingConventionsTest {
         if (c.isInterface() || c.isEnum() || c.isRecord() || !Modifier.isFinal(c.getModifiers())) {
             return false;
         }
-        Constructor<?>[] ctors = c.getDeclaredConstructors();
-        boolean privateOnly =
-                ctors.length == 1 && Modifier.isPrivate(ctors[0].getModifiers()) && ctors[0].getParameterCount() == 0;
+        Constructor<?>[] constructors = c.getDeclaredConstructors();
+        boolean privateOnly = constructors.length == 1
+                && Modifier.isPrivate(constructors[0].getModifiers())
+                && constructors[0].getParameterCount() == 0;
         boolean allStatic = Arrays.stream(c.getDeclaredMethods())
                 .filter(m -> !m.isSynthetic())
                 .allMatch(m -> Modifier.isStatic(m.getModifiers()));

@@ -4,6 +4,7 @@
 spring:
   datasource:
     # The docker compose database. Outside this profile there is no default password.
+    # noinspection SpellCheckingInspection
     password: ${DATABASE_PASSWORD:insidejoke}
 
 server:

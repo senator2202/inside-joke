@@ -77,7 +77,7 @@
         </dependency>
 
         <dependency>
-            <!-- MAIL_PROVIDER=smtp: Jakarta Mail (Angus) through Spring's JavaMailSender. -->
+            <!-- MAIL_PROVIDER=SMTP: Jakarta Mail (Angus) through Spring's JavaMailSender. -->
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>

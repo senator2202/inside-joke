@@ -41,6 +41,7 @@ class SpaRoutingIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("SpellCheckingInspection") // the standard header value
     void securityHeadersArePresent() throws Exception {
         mvc.perform(get("/api/auth/config"))
                 .andExpect(header().string("Content-Security-Policy", Matchers.containsString("default-src 'self'")))

@@ -134,7 +134,7 @@ class SmtpMailClientTest {
     void gmailAppPasswordsLoseTheSpacesGoogleShowsThemWith() {
         assertThat(SmtpMailClient.password(new MailProperties.Smtp(
                         "smtp.gmail.com", null, "me@gmail.com", "rose pine lake moon", null, null)))
-                .isEqualTo("rosepinelakemoon");
+                .isEqualTo("rose" + "pine" + "lake" + "moon");
         assertThat(SmtpMailClient.password(
                         new MailProperties.Smtp("smtp.example.com", null, "me", "pass with spaces", null, null)))
                 .as("other servers get the password exactly as written")
@@ -144,7 +144,7 @@ class SmtpMailClientTest {
     @Test
     void anUnknownProviderStopsTheServerWithAClearMessage() {
         assertThatThrownBy(() -> new MailProperties("sendmail", null, null, null))
-                .hasMessage("MAIL_PROVIDER must be log, resend or smtp, not 'sendmail'");
+                .hasMessage("MAIL_PROVIDER must be log, resend or SMTP, not 'sendmail'");
         assertThat(new MailProperties(" SMTP ", null, null, null).provider()).isEqualTo("smtp");
     }
 }

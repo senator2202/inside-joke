@@ -10,6 +10,8 @@ spring:
       enabled: true
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/insidejoke}
+    # The docker compose user.
+    # noinspection SpellCheckingInspection
     username: ${DATABASE_USER:insidejoke}
     # No default: without DATABASE_PASSWORD the server stops at startup. Only the local profile has one.
     password: ${DATABASE_PASSWORD}
@@ -93,7 +95,7 @@ app:
       port: ${SMTP_PORT:}
       username: ${SMTP_USERNAME:}
       password: ${SMTP_PASSWORD:}
-      security: ${SMTP_SECURITY:starttls}
+      security: ${SMTP_SECURITY:STARTTLS}
       timeout: ${SMTP_TIMEOUT:10s}
   google:
     client-id: ${GOOGLE_CLIENT_ID:}
@@ -128,4 +130,6 @@ app:
     support-email: ${APP_SUPPORT_EMAIL:${SUPPORT_EMAIL:support@insidejoke.app}}
   posthog:
     api-key: ${POSTHOG_API_KEY:}
+    # The PostHog EU host.
+    # noinspection SpellCheckingInspection
     host: ${POSTHOG_HOST:https://eu.i.posthog.com}

@@ -64,6 +64,7 @@ public class AiReportService {
                 h.get("retry-after"));
     }
 
+    @SuppressWarnings("SpellCheckingInspection") // the Anthropic header prefix
     private static RateLimitWindowDto window(Map<String, String> headers, String kind) {
         String prefix = "anthropic-ratelimit-" + kind + "-";
         Long limit = number(headers.get(prefix + "limit"));

@@ -49,10 +49,10 @@ class ContractTypesTest {
     }
 
     static String generate() throws ClassNotFoundException {
-        var dtos = ClassScanUtils.scanner(c -> "java.lang.Record".equals(c.getSuperClassName())
+        var contracts = ClassScanUtils.scanner(c -> "java.lang.Record".equals(c.getSuperClassName())
                 && c.getClassName().matches("com\\.insidejoke\\..*\\.dto\\.[A-Za-z]+"));
         Deque<Class<?>> queue = new ArrayDeque<>();
-        for (var d : dtos.findCandidateComponents("com.insidejoke")) {
+        for (var d : contracts.findCandidateComponents("com.insidejoke")) {
             queue.add(Class.forName(d.getBeanClassName()));
         }
         Map<String, String> out = new TreeMap<>();
