@@ -139,7 +139,7 @@ npm run dev
 
 Одна команда проверяет всё: формат кода (Spotless, Prettier), checkstyle, модульные тесты бэкенда (Surefire, фаза
 `test`), интеграционные тесты на встроенном PostgreSQL (Failsafe, фаза `verify`), а также typecheck, ESLint, сборку и
-тесты фронтенда. На момент сдачи: **backend 324 теста (205 модульных и 119 интеграционных), frontend 127 тестов, 0 падений, 0 нарушений checkstyle**.
+тесты фронтенда. На момент сдачи: **backend 329 тестов (210 модульных и 119 интеграционных), frontend 127 тестов, 0 падений, 0 нарушений checkstyle**.
 
 Покрытие считает JaCoCo: `backend/target/site/jacoco/index.html` — только модульные тесты (после `test`),
 `backend/target/site/jacoco-all/index.html` — все тесты вместе (после `verify`). Правила игры (пакет `game`) должны быть
@@ -215,6 +215,8 @@ npm run format:check
   **Require status checks to pass** → отметить `verify`.
 - Все настройки — переменные окружения, полный список с пояснениями в `.env.example`. В продакшене обязательно
   `APP_COOKIE_SECURE=true` (по умолчанию), `APP_PUBLIC_URL=https://…`, `AI_REQUIRE_LLM_MODERATION=true`.
+  Вне профиля `local` сервер не запустится без `DATABASE_PASSWORD` (значения по умолчанию нет) и с
+  `MAIL_PROVIDER=log` (этот режим пишет коды входа в лог) — нужен `resend` или `smtp`.
 - **Paddle:** URL вебхука `https://<домен>/api/webhooks/paddle`, события `transaction.completed`, `adjustment.created`,
   `adjustment.updated`. Секрет подписи — в `PADDLE_WEBHOOK_SECRET`.
 - **Google OAuth:** redirect URI `https://<домен>/login/oauth2/code/google`.

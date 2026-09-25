@@ -1,6 +1,11 @@
 # Local development profile (SPRING_PROFILES_ACTIVE=local): development-friendly defaults. Sign-in codes are printed to
 # the log instead of emailed, cookies work over plain http, and the Vite dev server on :5173 may open WebSockets.
 # Values from .env (see application.yml) or real environment variables still win.
+spring:
+  datasource:
+    # The docker compose database. Outside this profile there is no default password.
+    password: ${DATABASE_PASSWORD:insidejoke}
+
 server:
   servlet:
     session:

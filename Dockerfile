@@ -1,7 +1,8 @@
 # Inside Joke: one image with the backend and the built frontend inside.
 #   docker build -t inside-joke .
 #   docker run --env-file .env -p 8080:8080 inside-joke
-# Every setting is an environment variable (.env.example).
+# Every setting is an environment variable (.env.example). Outside the "local" profile the server refuses to start
+# without DATABASE_PASSWORD and with MAIL_PROVIDER=log.
 
 # ---- build: JDK 21 and Node.js 22 (the frontend module calls npm), tests are run by CI, not here
 FROM node:22-bookworm-slim AS node

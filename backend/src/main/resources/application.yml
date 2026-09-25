@@ -11,7 +11,8 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/insidejoke}
     username: ${DATABASE_USER:insidejoke}
-    password: ${DATABASE_PASSWORD:insidejoke}
+    # No default: without DATABASE_PASSWORD the server stops at startup. Only the local profile has one.
+    password: ${DATABASE_PASSWORD}
     hikari:
       maximum-pool-size: 10
   flyway:
