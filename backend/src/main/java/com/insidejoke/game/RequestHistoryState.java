@@ -67,6 +67,16 @@ final class RequestHistoryState {
         };
     }
 
+    /** Drops everything remembered for a member whose token was taken back. */
+    void forgetMember(String memberToken) {
+        lock.lock();
+        try {
+            byMember.remove(memberToken);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /** Removes the request unless a newer one took its id. Called with the lock held. */
     private void forget(String memberToken, String reqId, Call call) {
         Map<String, Call> calls = byMember.get(memberToken);

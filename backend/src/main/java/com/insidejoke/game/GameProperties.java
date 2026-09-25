@@ -30,4 +30,6 @@ public record GameProperties(
         // Checks of secrets and intake answers per room and game, apart from content generation.
         @DefaultValue("200") int roomModerationBudget,
         // Per player and game, so one player can't use up everyone's checks (8 × 25 = the room budget).
-        @DefaultValue("25") int maxModerationChecksPerPlayer) {}
+        @DefaultValue("25") int maxModerationChecksPerPlayer,
+        // Remote screen copies held per room at a time: one for every player who can join, each on their own computer.
+        @DefaultValue("8") int maxScreenCopies) {}

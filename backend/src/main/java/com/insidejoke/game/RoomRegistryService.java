@@ -80,6 +80,11 @@ public class RoomRegistryService {
         tokens.put(token, room.getCode());
     }
 
+    /** Stops a token that was taken back from resolving to its room. */
+    void forgetToken(String token) {
+        tokens.remove(token);
+    }
+
     void remove(RoomState room, Collection<String> roomTokens) {
         rooms.remove(room.getCode(), room);
         audienceKeys.remove(room.getAudienceKey(), room.getCode());

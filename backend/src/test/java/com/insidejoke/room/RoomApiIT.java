@@ -2,12 +2,14 @@ package com.insidejoke.room;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.insidejoke.game.GameProperties;
 import com.insidejoke.game.RoomRegistryService;
 import com.insidejoke.support.AbstractIntegrationTest;
 import com.insidejoke.support.ApiClient;
 import com.insidejoke.support.FakeAi;
 import com.insidejoke.support.GameSocket;
 import com.insidejoke.support.Party;
+import com.insidejoke.support.PropertyDefaults;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -239,6 +241,22 @@ class RoomApiIT extends AbstractIntegrationTest {
                 assertThat(String.join("\n", viewer.rawFrames())).doesNotContain(stream.code);
                 assertThat(String.join("\n", copy.rawFrames())).doesNotContain(stream.code);
             }
+        }
+    }
+
+    @Test
+    void aRoomRefusesScreenCopiesBeyondTheLimit() {
+        try (Party party = Party.create(port, json, FAKE, 0)) {
+            ApiClient remote = client();
+            int limit = PropertyDefaults.of("app.game", GameProperties.class).maxScreenCopies();
+            for (int i = 0; i < limit; i++) {
+                assertThat(remote.post("/api/rooms/" + party.code + "/screens", Map.of())
+                                .status())
+                        .isEqualTo(201);
+            }
+            ApiClient.Resp refused = remote.post("/api/rooms/" + party.code + "/screens", Map.of());
+            assertThat(refused.status()).isEqualTo(409);
+            assertThat(refused.errorCode()).isEqualTo("SCREENS_FULL");
         }
     }
 

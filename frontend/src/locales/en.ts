@@ -49,6 +49,8 @@ export const en = {
   "system.gone.createNew": "Create a new one",
   "system.cantConnect.title": "Can't connect",
   "system.cantConnect.text": "On public or office Wi-Fi, try mobile data instead.",
+  "system.screensFull.title": "Too many copies of this screen are open",
+  "system.screensFull.text": "Close the screen on a computer that no longer needs it, then try again in half a minute.",
 
   "error.ROOM_NOT_FOUND": "Check the code on the screen.",
   "error.ROOM_FULL": "There are already 8 players in this room.",
@@ -59,6 +61,7 @@ export const en = {
   "error.RATE_LIMITED": "Too many attempts. Wait a minute.",
   "error.NOT_STREAMER_MODE": "This room isn't open to viewers.",
   "error.AUDIENCE_FULL": "Too many viewers: voting is closed, but you can keep watching the stream.",
+  "error.SCREENS_FULL": "Too many copies of this screen are open.",
   "error.DRAIN_MODE": "We're updating the service. New rooms open again in a few minutes.",
   "error.NOT_ENOUGH_PLAYERS": "You need at least 3 players.",
   "error.DOSSIER_LIMIT": "That's the secret limit for this game.",

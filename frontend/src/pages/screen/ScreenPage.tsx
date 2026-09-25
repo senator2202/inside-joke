@@ -15,17 +15,21 @@ import { useHostVoice } from "../../lib/game/useHostVoice";
 import { useFollowRoomLanguage, useI18n } from "../../lib/i18n";
 import { LanguagePicker } from "../../components/LanguagePicker";
 import { GameError } from "../../lib/game/types";
-import { CantConnect, RoomGone } from "../system/GameSystemScreens";
+import { CantConnect, RoomGone, ScreensFull } from "../system/GameSystemScreens";
 import { AnsweringScene, FinaleScene, IntakeScene, LobbyScene, RoundVoteScene, VotingScene, type SceneProps } from "./scenes";
 import styles from "./Screen.module.css";
 
-type TokenState = { token: string } | { error: "gone" | "login" | "failed" };
+/** A token and whether it came from this device's saved seat (and so may have been taken back meanwhile). */
+type TokenState = { token: string; saved: boolean } | { error: "gone" | "login" | "failed" | "full" };
 
-/** Finds this device's screen token: saved seat, or asks the server (owner) / opens a view-only copy (remote). */
-function useScreenToken(code: string, remote: boolean): TokenState | null {
+/**
+ * Finds this device's screen token: saved seat, or asks the server (owner) / opens a view-only copy (remote).
+ * `renew` forgets the answer and asks the server again.
+ */
+function useScreenToken(code: string, remote: boolean): [TokenState | null, () => void] {
   const [result, setResult] = useState<TokenState | null>(() => {
     const seat = loadSeat(code, remote ? "screen" : "owner");
-    return seat ? { token: seat.token } : null;
+    return seat ? { token: seat.token, saved: true } : null;
   });
   useEffect(() => {
     if (result) return;
@@ -37,10 +41,11 @@ function useScreenToken(code: string, remote: boolean): TokenState | null {
     request.then(
       (r) => {
         saveSeat(code, { token: r.screenToken, kind: remote ? "screen" : "owner" });
-        done({ token: r.screenToken });
+        done({ token: r.screenToken, saved: false });
       },
       (e: unknown) => {
         if (isApiError(e) && e.status === 401) done({ error: "login" });
+        else if (isApiError(e, "SCREENS_FULL")) done({ error: "full" });
         else if (isApiError(e) && (e.status === 404 || e.status === 403)) done({ error: "gone" });
         else done({ error: "failed" });
       },
@@ -49,13 +54,14 @@ function useScreenToken(code: string, remote: boolean): TokenState | null {
       cancelled = true;
     };
   }, [code, remote, result]);
-  return result;
+  const renew = useCallback(() => setResult(null), []);
+  return [result, renew];
 }
 
 export function ScreenPage({ remote = false }: { remote?: boolean }) {
   const code = (useParams().code ?? "").toUpperCase();
   const navigate = useNavigate();
-  const token = useScreenToken(code, remote);
+  const [token, renew] = useScreenToken(code, remote);
   const { t } = useI18n();
 
   useEffect(() => {
@@ -66,9 +72,15 @@ export function ScreenPage({ remote = false }: { remote?: boolean }) {
 
   if (!token) return <Loading text={remote ? t("screen.connecting") : t("new.opening")} />;
   if ("error" in token) {
-    return token.error === "failed" ? <CantConnect onRetry={() => window.location.reload()} /> : <RoomGone owner={!remote} />;
+    if (token.error === "failed") return <CantConnect onRetry={() => window.location.reload()} />;
+    if (token.error === "full") return <ScreensFull onRetry={renew} />;
+    return <RoomGone owner={!remote} />;
   }
-  return <LiveScreen code={code} token={token.token} remote={remote} />;
+  // A remote copy nobody watched for a while gives its token to another computer: a saved one that no longer
+  // works is swapped for a fresh copy once, and only a fresh one that doesn't work means the party is over.
+  return (
+    <LiveScreen key={token.token} code={code} token={token.token} remote={remote} onGone={remote && token.saved ? renew : undefined} />
+  );
 }
 
 function Loading({ text }: { text: string }) {
@@ -80,7 +92,7 @@ function Loading({ text }: { text: string }) {
   );
 }
 
-function LiveScreen({ code, token, remote }: { code: string; token: string; remote: boolean }) {
+function LiveScreen({ code, token, remote, onGone }: { code: string; token: string; remote: boolean; onGone?: () => void }) {
   const { state, status, clockOffset, request, retry } = useGame(token);
   const i18n = useI18n();
   const { t } = i18n;
@@ -100,12 +112,17 @@ function LiveScreen({ code, token, remote }: { code: string; token: string; remo
     [request, i18n],
   );
 
+  const phase = state?.phase;
   useEffect(() => {
-    if (status === "gone") forgetSeat(code, remote ? "screen" : "owner");
-  }, [status, code, remote]);
+    if (status !== "gone") return;
+    forgetSeat(code, remote ? "screen" : "owner");
+    if (phase !== "CLOSED") onGone?.();
+  }, [status, code, remote, onGone, phase]);
 
   if (status === "unreachable") return <CantConnect onRetry={retry} />;
-  if (status === "gone" && state?.phase !== "CLOSED") return <RoomGone owner={!remote} />;
+  if (status === "gone" && state?.phase !== "CLOSED") {
+    return onGone ? <Loading text={t("screen.connecting")} /> : <RoomGone owner={!remote} />;
+  }
   if (status === "closed" || state?.phase === "CLOSED") return <PartyOver state={state} owner={!remote} code={code} />;
   if (!state) return <Loading text={remote ? t("screen.connecting") : t("new.opening")} />;
 

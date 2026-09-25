@@ -254,13 +254,26 @@ public class GameEngineService implements GameRuntimeService {
         return result[0];
     }
 
+    /**
+     * A view-only copy of the shared screen for remote players (user flow R1). A room holds at most
+     * {@link GameProperties#maxScreenCopies()} copies. When they are all taken, the copy that has had no socket for the
+     * longest time, but at least {@link GameProperties#disconnectGrace()}, gives up its token to the new one; if every
+     * copy is in use or has just dropped (and may be back in a moment), the request is refused (audit 19).
+     */
     public String joinScreen(RoomState room) {
         String token = TokenUtils.random(18);
         mutate(room, r -> {
             if (r.getPhase() == Phase.CLOSED) {
                 throw new ApiException(ErrorCode.ROOM_NOT_FOUND);
             }
-            r.putMember(token, new Member(token, MemberKind.SCREEN, null, null));
+            Instant now = clock.instant();
+            if (r.getScreenCopies().size() >= props.maxScreenCopies()) {
+                String idle = r.longestIdleScreenCopy(now.minus(props.disconnectGrace()))
+                        .orElseThrow(() -> new ApiException(ErrorCode.SCREENS_FULL));
+                r.removeScreenCopy(idle);
+                registry.forgetToken(idle);
+            }
+            r.putScreenCopy(token, new ScreenCopyState(now));
             registry.indexToken(token, r);
         });
         return token;
@@ -306,6 +319,10 @@ public class GameEngineService implements GameRuntimeService {
                     r.setAudiencePeak(Math.max(r.getAudiencePeak(), r.getAudienceCount()));
                 }
                 case SCREEN -> {
+                    ScreenCopyState copy = r.getScreenCopies().get(m.token());
+                    if (copy != null) {
+                        copy.connected();
+                    }
                     return;
                 }
             }
@@ -331,7 +348,12 @@ public class GameEngineService implements GameRuntimeService {
                 }
                 case AUDIENCE -> r.setAudienceCount(Math.max(0, r.getAudienceCount() - 1));
                 case SCREEN -> {
-                    // A screen copy's coming and going changes nothing.
+                    // A screen copy's coming and going changes nothing in the game; it only decides when the copy's
+                    // token may be given to someone else.
+                    ScreenCopyState copy = r.getScreenCopies().get(m.token());
+                    if (copy != null) {
+                        copy.disconnected(clock.instant());
+                    }
                 }
             }
         });

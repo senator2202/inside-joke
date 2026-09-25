@@ -20,7 +20,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Sends full state snapshots (blueprint 4.5). Changes within 50 ms are coalesced into one snapshot; stream
- * viewers get at most one per second. Snapshots are built under the room lock and sent after it is released.
+ * viewers get at most one per second. Screen copies all get one shared snapshot, and viewers one per voting state.
+ * Snapshots are built under the room lock and sent after it is released.
  */
 @Service
 public class BroadcastService implements RoomEventListener {
@@ -101,14 +102,20 @@ public class BroadcastService implements RoomEventListener {
             state.lastAudienceMs = now;
         }
         Map<ConnectionHandler, String> payloads = room.call(r -> {
-            Map<String, String> audienceCache = new HashMap<>();
+            Map<String, String> shared = new HashMap<>();
             Map<ConnectionHandler, String> out = new HashMap<>();
             for (ConnectionHandler c : targets) {
                 if (c.member.kind() == MemberKind.AUDIENCE) {
                     RoomStateDto view = projector().project(r, c.member);
                     String key =
                             "aud:" + (view.audience() != null && view.audience().voted());
-                    out.put(c, audienceCache.computeIfAbsent(key, k -> envelope(view)));
+                    out.put(c, shared.computeIfAbsent(key, k -> envelope(view)));
+                } else if (c.member.kind() == MemberKind.SCREEN) {
+                    // Every screen copy sees the same thing: one snapshot is built for all of them.
+                    out.put(
+                            c,
+                            shared.computeIfAbsent(
+                                    "screen", k -> envelope(projector().project(r, c.member))));
                 } else {
                     out.put(c, envelope(projector().project(r, c.member)));
                 }

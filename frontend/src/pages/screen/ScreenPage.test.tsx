@@ -87,6 +87,59 @@ describe("ScreenPage", () => {
     expect(mock.callsTo("POST /api/rooms/KWMP/screens")).toHaveLength(1);
   });
 
+  it("swaps a saved copy whose token was taken back for a fresh one", async () => {
+    const mock = mockFetch({
+      "GET /api/me": apiError(401, "UNAUTHORIZED"),
+      "POST /api/rooms/KWMP/screens": { status: 201, body: { screenToken: "copy-tok-2" } },
+    });
+    saveSeat("KWMP", { token: "copy-tok-1", kind: "screen" });
+    renderRoute("/view/KWMP", "/view/:code", <ScreenPage remote />);
+    act(() => {
+      net.last().open();
+      net.last().receive("error", "hello", { code: "ROOM_NOT_FOUND", message: "gone" });
+    });
+
+    await waitFor(() => expect(net.sockets).toHaveLength(2));
+    act(() => net.last().open());
+    expect(net.last().sent[0]?.data).toEqual({ token: "copy-tok-2" });
+    expect(loadSeat("KWMP", "screen")?.token).toBe("copy-tok-2");
+    expect(mock.callsTo("POST /api/rooms/KWMP/screens")).toHaveLength(1);
+    expect(screen.queryByRole("heading", { name: "This party has ended, or the code is wrong" })).not.toBeInTheDocument();
+  });
+
+  it("shows X1 when a fresh copy doesn't work either", async () => {
+    const mock = mockFetch({
+      "GET /api/me": apiError(401, "UNAUTHORIZED"),
+      "POST /api/rooms/KWMP/screens": { status: 201, body: { screenToken: "copy-tok" } },
+    });
+    renderRoute("/view/KWMP", "/view/:code", <ScreenPage remote />);
+    await waitFor(() => expect(net.sockets).toHaveLength(1));
+    act(() => {
+      net.last().open();
+      net.last().receive("error", "hello", { code: "ROOM_NOT_FOUND", message: "gone" });
+    });
+
+    expect(await screen.findByRole("heading", { name: "This party has ended, or the code is wrong" })).toBeInTheDocument();
+    expect(mock.callsTo("POST /api/rooms/KWMP/screens")).toHaveLength(1);
+    expect(loadSeat("KWMP", "screen")).toBeNull();
+  });
+
+  it("says when every copy of the screen is taken and asks again on retry", async () => {
+    const mock = mockFetch({
+      "GET /api/me": apiError(401, "UNAUTHORIZED"),
+      "POST /api/rooms/KWMP/screens": [apiError(409, "SCREENS_FULL"), { status: 201, body: { screenToken: "copy-tok" } }],
+    });
+    renderRoute("/view/KWMP", "/view/:code", <ScreenPage remote />);
+    expect(await screen.findByRole("heading", { name: "Too many copies of this screen are open" })).toBeInTheDocument();
+    expect(net.sockets).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await waitFor(() => expect(net.sockets).toHaveLength(1));
+    act(() => net.last().open());
+    expect(net.last().sent[0]?.data).toEqual({ token: "copy-tok" });
+    expect(mock.callsTo("POST /api/rooms/KWMP/screens")).toHaveLength(2);
+  });
+
   it("thanks the owner and asks for a rating when the party closes", async () => {
     const mock = mockFetch({
       "GET /api/me": apiError(401, "UNAUTHORIZED"),

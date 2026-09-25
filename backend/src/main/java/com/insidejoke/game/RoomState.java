@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledFuture;
@@ -60,6 +61,8 @@ public final class RoomState {
     private final Map<String, PlayerState> players = new LinkedHashMap<>();
     private String captainId;
     private final Map<String, Member> members = new HashMap<>();
+    /** Remote screen copies by token; at most {@link GameProperties#maxScreenCopies()} are held at a time. */
+    private final Map<String, ScreenCopyState> screenCopies = new HashMap<>();
     /** Recent requests per member token, to answer re-sent copies; has its own lock, usable without the room's. */
     private final RequestHistoryState requests = new RequestHistoryState();
 
@@ -316,6 +319,34 @@ public final class RoomState {
 
     public void putMember(String key, Member value) {
         members.put(key, value);
+    }
+
+    Map<String, ScreenCopyState> getScreenCopies() {
+        return Collections.unmodifiableMap(screenCopies);
+    }
+
+    void putScreenCopy(String token, ScreenCopyState copy) {
+        members.put(token, new Member(token, MemberKind.SCREEN, null, null));
+        screenCopies.put(token, copy);
+    }
+
+    /** Takes back a screen copy's token: the member, its state and the requests it sent. */
+    void removeScreenCopy(String token) {
+        members.remove(token);
+        screenCopies.remove(token);
+        requests.forgetMember(token);
+    }
+
+    /**
+     * The screen copy that has had no socket for the longest time, if that began no later than {@code idleBefore}:
+     * the one whose token can be given to someone else.
+     */
+    Optional<String> longestIdleScreenCopy(Instant idleBefore) {
+        return screenCopies.entrySet().stream()
+                .filter(e -> e.getValue().getIdleSince() != null
+                        && !e.getValue().getIdleSince().isAfter(idleBefore))
+                .min(Comparator.comparing(e -> e.getValue().getIdleSince()))
+                .map(Map.Entry::getKey);
     }
 
     public List<DossierFact> getDossier() {

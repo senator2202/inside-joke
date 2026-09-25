@@ -29,3 +29,13 @@ export function CantConnect({ onRetry }: { onRetry: () => void }) {
     </SystemScreen>
   );
 }
+
+/** Every copy of the shared screen this room allows is open, and each is in use or has only just closed. */
+export function ScreensFull({ onRetry }: { onRetry: () => void }) {
+  const { t } = useI18n();
+  return (
+    <SystemScreen title={t("system.screensFull.title")} actions={<Button onClick={onRetry}>{t("common.retry")}</Button>}>
+      <p>{t("system.screensFull.text")}</p>
+    </SystemScreen>
+  );
+}

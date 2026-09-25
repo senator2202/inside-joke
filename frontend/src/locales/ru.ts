@@ -51,6 +51,8 @@ export const ru: Record<MessageKey, string> & Record<string, string> = {
   "system.gone.createNew": "Создать новую",
   "system.cantConnect.title": "Не удаётся подключиться",
   "system.cantConnect.text": "Если вы в общественной или офисной сети Wi-Fi, попробуйте мобильный интернет.",
+  "system.screensFull.title": "Открыто слишком много копий экрана",
+  "system.screensFull.text": "Закройте экран на компьютере, где он больше не нужен, и попробуйте снова через полминуты.",
 
   "error.ROOM_NOT_FOUND": "Проверьте код на экране.",
   "error.ROOM_FULL": "В этой комнате уже 8 игроков.",
@@ -61,6 +63,7 @@ export const ru: Record<MessageKey, string> & Record<string, string> = {
   "error.RATE_LIMITED": "Слишком много попыток. Подождите минуту.",
   "error.NOT_STREAMER_MODE": "Эта комната не для зрителей.",
   "error.AUDIENCE_FULL": "Слишком много зрителей: голосование закрыто, но стрим можно смотреть дальше.",
+  "error.SCREENS_FULL": "Открыто слишком много копий этого экрана.",
   "error.DRAIN_MODE": "Мы обновляем сервис. Новые комнаты снова можно будет создать через несколько минут.",
   "error.NOT_ENOUGH_PLAYERS": "Нужно хотя бы 3 игрока.",
   "error.DOSSIER_LIMIT": "Лимит секретов на эту игру исчерпан.",

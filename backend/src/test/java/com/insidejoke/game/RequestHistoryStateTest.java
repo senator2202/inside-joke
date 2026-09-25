@@ -104,4 +104,19 @@ class RequestHistoryStateTest {
                 .as("the oldest is forgotten")
                 .isPresent();
     }
+
+    @Test
+    void aTokenTakenBackForgetsItsRequestsAndLeavesOthersAlone() {
+        vote("copy", "r1", VOTE_A, new Answers()).orElseThrow().ok(Map.of("n", 1));
+        vote("other", "r1", VOTE_A, new Answers()).orElseThrow().ok(Map.of("n", 2));
+
+        history.forgetMember("copy");
+
+        assertThat(vote("copy", "r1", VOTE_A, new Answers()))
+                .as("nothing remembered for the token")
+                .isPresent();
+        Answers again = new Answers();
+        assertThat(vote("other", "r1", VOTE_A, again)).isEmpty();
+        assertThat(again.got).containsExactly("ok {n=2}");
+    }
 }

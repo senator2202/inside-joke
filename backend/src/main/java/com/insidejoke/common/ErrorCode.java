@@ -26,6 +26,7 @@ public enum ErrorCode {
     NAME_INVALID(HttpStatus.UNPROCESSABLE_CONTENT, "Pick a different name."),
     NOT_STREAMER_MODE(HttpStatus.CONFLICT, "This room is not open to an audience."),
     AUDIENCE_FULL(HttpStatus.CONFLICT, "The audience is full."),
+    SCREENS_FULL(HttpStatus.CONFLICT, "Too many copies of this screen are open."),
     DRAIN_MODE(HttpStatus.SERVICE_UNAVAILABLE, "Creating rooms is paused for a short update."),
 
     PAYWALL_FREE_LIMIT(HttpStatus.PAYMENT_REQUIRED, "This week's free game has been played."),
