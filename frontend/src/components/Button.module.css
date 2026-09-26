@@ -14,7 +14,7 @@
   background: var(--btn-bg);
   color: var(--btn-fg);
   box-shadow: var(--btn-shadow);
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-1);
   font-weight: 700;
   font-stretch: 92%;
@@ -53,7 +53,7 @@
   border-color: transparent;
   background: transparent;
   box-shadow: none;
-  font-family: var(--font-body);
+  font-family: var(--font-body), sans-serif;
   font-size: var(--step-0);
   font-weight: 700;
   text-decoration: underline;

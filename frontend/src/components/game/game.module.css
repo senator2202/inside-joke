@@ -8,7 +8,7 @@
   padding: 0 var(--space-2);
   border: 3px solid var(--marker);
   border-radius: var(--radius-pill);
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-2);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -86,7 +86,7 @@
   border-radius: var(--radius-pill);
   background: var(--marker);
   color: var(--ink);
-  font-family: var(--font-body);
+  font-family: var(--font-body), sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
   line-height: 1.4;

@@ -16,7 +16,7 @@
   border-radius: var(--radius-sheet);
   background: var(--paper-raised);
   text-align: center;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-3);
   font-weight: 700;
   font-variant-numeric: tabular-nums;

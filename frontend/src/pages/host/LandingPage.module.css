@@ -14,7 +14,7 @@
 
 .promise {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: clamp(2.4rem, 5.2vw, 4.4rem);
   font-stretch: 88%;
   line-height: 0.98;
@@ -54,7 +54,7 @@
 
 .section h2 {
   margin: 0 0 var(--space-5);
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-3);
   line-height: 1;
 }
@@ -70,7 +70,7 @@
 
 .steps h3 {
   margin: var(--space-3) 0 var(--space-2);
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-1);
 }
 
@@ -86,7 +86,7 @@
   border: 2px solid var(--ink);
   border-radius: 50%;
   background: var(--marker);
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-1);
   font-weight: 800;
 }
@@ -141,7 +141,7 @@
 
 .price h3 {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-1);
 }
 
@@ -150,7 +150,7 @@
 }
 
 .amount {
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-3);
   font-weight: 800;
   line-height: 1.1;

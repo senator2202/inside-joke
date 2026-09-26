@@ -6,7 +6,7 @@
 
 .title {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-4);
   line-height: 1;
 }
@@ -99,7 +99,7 @@
 
 .card h2 {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-1);
 }
 
@@ -127,7 +127,7 @@
 
 .kpiValue {
   margin: var(--space-1) 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: var(--step-2);
   font-weight: 800;
   line-height: 1.1;

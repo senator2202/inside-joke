@@ -26,10 +26,6 @@ public final class ManualExecutor extends AbstractExecutorService {
         }
     }
 
-    public int pending() {
-        return queue.size();
-    }
-
     @Override
     public void execute(Runnable command) {
         queue.add(command);

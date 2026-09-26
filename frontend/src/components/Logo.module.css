@@ -7,7 +7,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55em;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: 1.35rem;
   font-weight: 800;
   font-stretch: 80%;

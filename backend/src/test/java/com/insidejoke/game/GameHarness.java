@@ -85,10 +85,6 @@ final class GameHarness {
         projection = new RoomProjectionService(app, FALLBACK, props, ai, clock);
     }
 
-    static FallbackContentService fallback() {
-        return FALLBACK;
-    }
-
     // ---------------------------------------------------------------- a party
 
     /** A player's seat: their id, name and the member their phone speaks as. */
@@ -229,10 +225,6 @@ final class GameHarness {
             error();
             return error;
         }
-
-        boolean answered() {
-            return ok != null || error != null;
-        }
     }
 
     Answer send(RoomState room, Member from, String type, Map<String, ?> data) {
@@ -282,10 +274,6 @@ final class GameHarness {
     void release() {
         held = false;
         settle();
-    }
-
-    int heldWork() {
-        return background.pending();
     }
 
     /** Moves time forward; every timer due on the way fires at its moment, followed by the work it started. */

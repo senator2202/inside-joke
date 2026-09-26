@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.insidejoke</groupId>
         <artifactId>inside-joke</artifactId>
-        <version>0.10.0</version>
+        <version>0.11.1</version>
     </parent>
 
     <artifactId>frontend</artifactId>
