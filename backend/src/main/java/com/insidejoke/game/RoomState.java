@@ -47,6 +47,11 @@ public final class RoomState {
 
     private RoomSettings settings;
     private boolean locked;
+    /** Whether the owner may add bots: set when an admin creates the room (roadmap R34). */
+    private boolean botsAllowed;
+    /** Bot moves already planned, by step ("answer:1:3:d7"), so each is made once. */
+    private final Set<String> botSteps = new HashSet<>();
+
     private Phase phase = Phase.LOBBY;
     private Long deadlineMs;
     private PauseReason pause;
@@ -203,6 +208,35 @@ public final class RoomState {
 
     public void setSettings(RoomSettings settings) {
         this.settings = settings;
+    }
+
+    public boolean isBotsAllowed() {
+        return botsAllowed;
+    }
+
+    void setBotsAllowed(boolean botsAllowed) {
+        this.botsAllowed = botsAllowed;
+    }
+
+    boolean hasBots() {
+        return players.values().stream().anyMatch(p -> p.isBot() && !p.isRemoved());
+    }
+
+    /** Marks a bot's step as planned; false when it already was. */
+    boolean planBotStep(String step) {
+        return botSteps.add(step);
+    }
+
+    /** Lets a planned bot step be planned again (its move was dropped while the game was paused). */
+    void forgetBotStep(String step) {
+        botSteps.remove(step);
+    }
+
+    /** The member a player acts through (a bot's is never handed out, so no socket can take its place). */
+    Optional<Member> memberOf(String playerId) {
+        return members.values().stream()
+                .filter(m -> m.kind() == MemberKind.PLAYER && playerId.equals(m.playerId()))
+                .findFirst();
     }
 
     public boolean isLocked() {

@@ -11,4 +11,6 @@ public record PlayerDto(
         int score,
         boolean captain,
         String status,
-        Integer rank) {}
+        Integer rank,
+        // True for a test bot (roadmap R34); absent for people.
+        Boolean bot) {}

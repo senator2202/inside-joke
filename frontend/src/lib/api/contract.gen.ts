@@ -294,6 +294,7 @@ export interface LobbyDto {
   audienceCount: number;
   minPlayers: number;
   maxPlayers: number;
+  botsAllowed?: boolean;
 }
 
 export interface MoneyMetricsDto {
@@ -432,6 +433,7 @@ export interface PlayerDto {
   captain: boolean;
   status?: string;
   rank?: number;
+  bot?: boolean;
 }
 
 export type Product = "PARTY_PASS" | "HOST_PASS";

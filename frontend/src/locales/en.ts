@@ -210,6 +210,8 @@ export const en = {
   "lobby.full": "The room is full",
   "lobby.everyoneHere": "Everyone here?",
   "lobby.remove": "Remove",
+  "lobby.bot": "bot",
+  "lobby.addBot": "🤖 Add a bot",
   "lobby.removeAria": "Remove {name}",
   "lobby.lengthRounds": "{length}, {rounds} rounds",
   "lobby.change": "Change",

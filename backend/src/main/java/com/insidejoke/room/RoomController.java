@@ -1,5 +1,6 @@
 package com.insidejoke.room;
 
+import com.insidejoke.auth.AdminAccessService;
 import com.insidejoke.auth.AppPrincipal;
 import com.insidejoke.common.ApiException;
 import com.insidejoke.common.AppProperties;
@@ -39,11 +40,14 @@ public class RoomController {
     private final GameEngineService engine;
     private final RateLimitService limiter;
     private final AppProperties app;
+    private final AdminAccessService admins;
 
-    public RoomController(GameEngineService engine, RateLimitService limiter, AppProperties app) {
+    public RoomController(
+            GameEngineService engine, RateLimitService limiter, AppProperties app, AdminAccessService admins) {
         this.engine = engine;
         this.limiter = limiter;
         this.app = app;
+        this.admins = admins;
     }
 
     @PostMapping("/api/rooms")
@@ -60,7 +64,9 @@ public class RoomController {
             throw invalid("adultsConfirmed", "Confirm that every player is over 18.");
         }
         boolean hideCode = mode == RoomMode.STREAMER && Boolean.TRUE.equals(body.hideCode());
-        RoomState room = engine.createRoom(user.id(), new RoomSettings(tone, length, mode, hideCode, language));
+        // An admin's room may take test bots (roadmap R34).
+        RoomState room = engine.createRoom(
+                user.id(), new RoomSettings(tone, length, mode, hideCode, language), admins.isAdmin(user));
         return new CreatedRoomDto(room.getCode(), room.getOwnerToken(), app.publicUrl() + "/j/" + room.getCode());
     }
 

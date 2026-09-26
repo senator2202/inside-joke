@@ -17,6 +17,8 @@ export interface PlayerView {
   captain: boolean;
   status: string;
   rank?: number;
+  /** A test bot added by an admin (roadmap R34). */
+  bot?: boolean;
 }
 
 export interface Assignment {
@@ -98,7 +100,15 @@ export interface RoomView {
   thinking: boolean;
   locked: boolean;
   settings: { tone: Tone; length: GameLength; mode: RoomMode; hideCode: boolean; language?: string };
-  lobby?: { joinUrl?: string; audienceUrl?: string; audienceCount: number; minPlayers: number; maxPlayers: number };
+  lobby?: {
+    joinUrl?: string;
+    audienceUrl?: string;
+    audienceCount: number;
+    minPlayers: number;
+    maxPlayers: number;
+    /** On the owner's screen of a room an admin created: test bots can be added. */
+    botsAllowed?: boolean;
+  };
   players?: PlayerView[];
   you: You;
   host?: { lineId: string; text: string; audioId?: string; skipped: boolean; aboutYou?: boolean; canSkip?: boolean };

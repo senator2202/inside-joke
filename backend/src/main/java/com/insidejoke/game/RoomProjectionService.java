@@ -85,14 +85,16 @@ public class RoomProjectionService {
                     r.getSettings().mode() == RoomMode.STREAMER ? base + "/w/" + r.getAudienceKey() : null,
                     r.getAudienceCount(),
                     props.minPlayers(),
-                    props.maxPlayers());
+                    props.maxPlayers(),
+                    owner && r.isBotsAllowed() ? Boolean.TRUE : null);
         } else if (screen && r.getSettings().mode() == RoomMode.STREAMER) {
             lobby = new LobbyDto(
                     null,
                     app.publicUrl() + "/w/" + r.getAudienceKey(),
                     r.getAudienceCount(),
                     props.minPlayers(),
-                    props.maxPlayers());
+                    props.maxPlayers(),
+                    null);
         }
 
         RoundDto round = roundView(r);
@@ -147,7 +149,8 @@ public class RoomProjectionService {
                     p.getScore(),
                     p.getId().equals(r.getCaptainId()),
                     status(r, p),
-                    r.getPhase() == Phase.FINALE ? r.rankOf(p) : null));
+                    r.getPhase() == Phase.FINALE ? r.rankOf(p) : null,
+                    p.isBot() ? Boolean.TRUE : null));
         }
         return out;
     }
@@ -558,7 +561,8 @@ public class RoomProjectionService {
                     p.getScore(),
                     p.getId().equals(r.getCaptainId()),
                     "ready",
-                    r.rankOf(p)));
+                    r.rankOf(p),
+                    p.isBot() ? Boolean.TRUE : null));
         }
         int top = standings.isEmpty() ? 0 : standings.getFirst().score();
         List<String> winners = standings.stream()

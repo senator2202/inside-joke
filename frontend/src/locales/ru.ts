@@ -216,6 +216,8 @@ export const ru: Record<MessageKey, string> & Record<string, string> = {
   "lobby.full": "Комната заполнена",
   "lobby.everyoneHere": "Все в сборе?",
   "lobby.remove": "Убрать",
+  "lobby.bot": "бот",
+  "lobby.addBot": "🤖 Добавить бота",
   "lobby.removeAria": "Убрать игрока {name}",
   "lobby.lengthRounds": "{length}, раундов: {rounds}",
   "lobby.change": "Изменить",

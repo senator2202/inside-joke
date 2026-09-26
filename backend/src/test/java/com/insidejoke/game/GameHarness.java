@@ -128,6 +128,15 @@ final class GameHarness {
         return party;
     }
 
+    /** A room created by an admin, so its owner may add test bots (roadmap R34); nobody has joined yet. */
+    Party adminParty() {
+        RoomState room = engine.createRoom(HOST, SETTINGS, true);
+        Member owner = member(room, room.getOwnerToken());
+        engine.connected(room, owner);
+        settle();
+        return new Party(room, owner, new ArrayList<>());
+    }
+
     Seat join(Party party, String name) {
         GameEngineService.JoinedPlayer joined = engine.joinPlayer(party.room(), name, null);
         Member member = member(party.room(), joined.token());

@@ -189,14 +189,14 @@ final class LobbyPhaseHandler {
         PlayerState p = GameRuleUtils.activePlayer(r, playerId);
         p.setRemoved(true);
         if (playerId.equals(r.getCaptainId())) {
-            r.setCaptainId(r.activePlayers().stream()
+            // A person takes over, one who is connected if possible; bots never lead.
+            List<PlayerState> people =
+                    r.activePlayers().stream().filter(o -> !o.isBot()).toList();
+            r.setCaptainId(people.stream()
                     .filter(PlayerState::connected)
                     .map(PlayerState::getId)
                     .findFirst()
-                    .orElse(r.activePlayers().stream()
-                            .map(PlayerState::getId)
-                            .findFirst()
-                            .orElse(null)));
+                    .orElse(people.stream().map(PlayerState::getId).findFirst().orElse(null)));
         }
         events.kicked(r, playerId);
         if (r.getPhase() == Phase.VOTING && r.getRound() != null && r.getRound().currentVote() != null) {

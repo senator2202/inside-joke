@@ -46,6 +46,28 @@ describe("Lobby (S1)", () => {
     vi.useRealTimers();
   });
 
+  it("lets the owner of an admin's room add test bots, and marks them", () => {
+    const lobby = { joinUrl: "http://localhost/j/KWMP", audienceCount: 0, minPlayers: 3, maxPlayers: 8, botsAllowed: true };
+    const base = roomState({ you: owner, lobby });
+    const state = {
+      ...base,
+      players: [...(base.players ?? []), { ...base.players![0]!, id: "p9", name: "Robo Rita", captain: false, bot: true }],
+    };
+    const p = props(state);
+    render(<LobbyScene {...p} />);
+    expect(screen.getByText("bot")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "🤖 Add a bot" }));
+    expect(p.sent).toEqual([{ type: "bot.add", data: {} }]);
+  });
+
+  it("offers no bots in an ordinary room or on a copy of the screen", () => {
+    render(<LobbyScene {...props(roomState({ you: owner }))} />);
+    expect(screen.queryByRole("button", { name: "🤖 Add a bot" })).not.toBeInTheDocument();
+    const lobby = { audienceCount: 0, minPlayers: 3, maxPlayers: 8, botsAllowed: true };
+    render(<LobbyScene {...props(roomState({ you: { role: "SCREEN" as const }, lobby }), false)} />);
+    expect(screen.queryByRole("button", { name: "🤖 Add a bot" })).not.toBeInTheDocument();
+  });
+
   it("asks before switching an open room to Spicy", () => {
     const p = props(roomState({ you: owner }));
     render(<LobbyScene {...p} />);

@@ -18,6 +18,8 @@ public enum CommandType {
     PAYWALL_DISMISS("paywall.dismiss", Action.MODERATE_ROOM),
     PLAYER_KICK("player.kick", Action.MODERATE_ROOM),
     CAPTAIN_SET("captain.set", Action.MODERATE_ROOM),
+    /** Adds a test bot; only in rooms an admin created (roadmap R34). */
+    BOT_ADD("bot.add", Action.MODERATE_ROOM),
     ROOM_LOCK("room.lock", Action.MODERATE_ROOM),
     ROOM_CLOSE("room.close", Action.MODERATE_ROOM),
     INTAKE_SUBMIT("intake.submit", Action.PLAY),
@@ -41,6 +43,11 @@ public enum CommandType {
     /** The permission the sender needs, or empty when the handler decides. */
     public Optional<Action> action() {
         return Optional.ofNullable(action);
+    }
+
+    /** The name in the protocol. */
+    public String wire() {
+        return wire;
     }
 
     public static Optional<CommandType> fromWire(String name) {

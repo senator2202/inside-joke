@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.random.RandomGenerator;
@@ -31,6 +33,8 @@ public class FallbackContentService {
         final Map<String, String> titles = new HashMap<>();
         final List<String> genericTitles = new ArrayList<>();
         final Map<String, String> labels = new HashMap<>();
+        final List<String> botNames = new ArrayList<>();
+        final List<String> botAnswers = new ArrayList<>();
     }
 
     private final Map<Language, Pack> packs = new EnumMap<>(Language.class);
@@ -75,6 +79,11 @@ public class FallbackContentService {
         }
         for (Map.Entry<String, JsonNode> e : root.path("labels").properties()) {
             pack.labels.put(e.getKey(), e.getValue().asString());
+        }
+        pack.botNames.addAll(strings(root.path("bots").path("names")));
+        pack.botAnswers.addAll(strings(root.path("bots").path("answers")));
+        if (pack.botNames.size() < 8 || pack.botAnswers.size() < 3) {
+            throw new IllegalStateException(file + " needs 8 bot names and 3 bot answers");
         }
         return pack;
     }
@@ -142,6 +151,31 @@ public class FallbackContentService {
             throw new IllegalArgumentException("No fallback lines of kind " + kind);
         }
         return pick(options, random);
+    }
+
+    /**
+     * A name for a new test bot (roadmap R34) that no player in the room has, ignoring case; {@code "Bot N"} once the
+     * prewritten ones are all taken.
+     */
+    public String botName(Language language, Set<String> taken, RandomGenerator random) {
+        Set<String> used = new HashSet<>();
+        taken.forEach(n -> used.add(n.toLowerCase(Locale.ROOT)));
+        List<String> free = pack(language).botNames.stream()
+                .filter(n -> !used.contains(n.toLowerCase(Locale.ROOT)))
+                .toList();
+        if (!free.isEmpty()) {
+            return pick(free, random);
+        }
+        int n = 1;
+        while (used.contains(("bot " + n).toLowerCase(Locale.ROOT))) {
+            n++;
+        }
+        return "Bot " + n;
+    }
+
+    /** A prewritten answer a test bot gives to an intake question or a duel prompt. */
+    public String botAnswer(Language language, RandomGenerator random) {
+        return pick(pack(language).botAnswers, random);
     }
 
     /** Short fixed texts shown on screens, such as "[No answer]". */

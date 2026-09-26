@@ -141,7 +141,7 @@ npm run dev
 
 Одна команда проверяет всё: формат кода (Spotless, Prettier), checkstyle, модульные тесты бэкенда (Surefire, фаза
 `test`), интеграционные тесты на встроенном PostgreSQL (Failsafe, фаза `verify`), а также typecheck, ESLint, сборку и
-тесты фронтенда. На момент сдачи: **backend 356 тестов (226 модульных и 130 интеграционных), frontend 134 теста, 0 падений, 0 нарушений checkstyle**.
+тесты фронтенда. На момент сдачи: **backend 366 тестов (234 модульных и 132 интеграционных), frontend 136 тестов, 0 падений, 0 нарушений checkstyle**.
 
 Покрытие считает JaCoCo: `backend/target/site/jacoco/index.html` — только модульные тесты (после `test`),
 `backend/target/site/jacoco-all/index.html` — все тесты вместе (после `verify`). Правила игры (пакет `game`) должны быть

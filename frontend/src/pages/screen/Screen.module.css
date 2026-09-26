@@ -196,6 +196,13 @@
   white-space: nowrap;
 }
 
+.botTag {
+  padding: 0 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--night-raised);
+  font-size: var(--step--1);
+}
+
 .slotEmpty {
   display: grid;
   place-items: center;

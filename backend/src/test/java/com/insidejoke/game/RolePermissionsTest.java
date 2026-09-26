@@ -29,6 +29,7 @@ class RolePermissionsTest {
             Map.entry(CommandType.PAYWALL_DISMISS, OWNER),
             Map.entry(CommandType.PLAYER_KICK, OWNER),
             Map.entry(CommandType.CAPTAIN_SET, OWNER),
+            Map.entry(CommandType.BOT_ADD, OWNER),
             Map.entry(CommandType.ROOM_LOCK, OWNER),
             Map.entry(CommandType.ROOM_CLOSE, OWNER),
             Map.entry(CommandType.INTAKE_SUBMIT, PLAYERS),

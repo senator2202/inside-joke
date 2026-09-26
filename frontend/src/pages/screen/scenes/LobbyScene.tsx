@@ -78,6 +78,7 @@ export function LobbyScene({ state, owner, send }: SceneProps) {
                 <>
                   <Avatar player={p} size="large" />
                   <span className={styles.slotName}>{p.name}</span>
+                  {p.bot && <span className={styles.botTag}>{t("lobby.bot")}</span>}
                   {owner && (
                     <button
                       type="button"
@@ -97,6 +98,11 @@ export function LobbyScene({ state, owner, send }: SceneProps) {
             </li>
           ))}
         </ul>
+        {owner && lobby?.botsAllowed && players.length < max && (
+          <Button variant="secondary" onClick={() => send("bot.add")}>
+            {t("lobby.addBot")}
+          </Button>
+        )}
         <HostLine text={state.host?.text} />
         <div className={styles.settingsStrip}>
           <span>{t(`tone.${state.settings.tone}.title`)}</span>

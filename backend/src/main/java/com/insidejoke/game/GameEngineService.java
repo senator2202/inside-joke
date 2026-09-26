@@ -29,6 +29,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -75,6 +76,7 @@ public class GameEngineService implements GameRuntimeService {
     private RoundPhaseHandler rounds;
     private VotingPhaseHandler voting;
     private FinalePhaseHandler finale;
+    private BotPlayerHandler bots;
     private Map<CommandType, CommandHandler> commands;
     private Map<Phase, PhaseHandler> phases;
 
@@ -120,6 +122,7 @@ public class GameEngineService implements GameRuntimeService {
         rounds = new RoundPhaseHandler(this, props, ai, fallback, analytics, random);
         voting = new VotingPhaseHandler(this, props, ai);
         finale = new FinalePhaseHandler(this, ai, fallback, random);
+        bots = new BotPlayerHandler(fallback, random);
         commands = commandTable();
         phases = new EnumMap<>(Phase.class);
         phases.put(Phase.INTAKE, intake::endIntake);
@@ -132,6 +135,11 @@ public class GameEngineService implements GameRuntimeService {
     // ------------------------------------------------------------------ rooms and members (REST side)
 
     public RoomState createRoom(UUID ownerUserId, RoomSettings roomSettings) {
+        return createRoom(ownerUserId, roomSettings, false);
+    }
+
+    /** A new room; {@code botsAllowed} lets its owner add test bots (only for admins, roadmap R34). */
+    public RoomState createRoom(UUID ownerUserId, RoomSettings roomSettings, boolean botsAllowed) {
         if (settings.get().drainMode()) {
             throw new ApiException(ErrorCode.DRAIN_MODE);
         }
@@ -146,6 +154,7 @@ public class GameEngineService implements GameRuntimeService {
         RoomState room = registry.register((code, audienceKey) -> {
             RoomState r = new RoomState(code, audienceKey, ownerUserId, TokenUtils.random(18), roomSettings, now);
             r.putMember(r.getOwnerToken(), new Member(r.getOwnerToken(), MemberKind.OWNER_SCREEN, null, null));
+            r.setBotsAllowed(botsAllowed);
             r.setIntakeQuestions(fallback.intakeQuestions(roomSettings.language(), roomSettings.tone(), random));
             return r;
         });
@@ -237,12 +246,14 @@ public class GameEngineService implements GameRuntimeService {
                     ? rawEmoji
                     : EMOJIS.get(random.nextInt(EMOJIS.size()));
             String token = TokenUtils.random(18);
-            PlayerState p = new PlayerState(r.nextId("p"), name, emoji, clock.instant());
+            PlayerState p = new PlayerState(r.nextId("p"), name, emoji, clock.instant(), false);
             p.setDisconnectedAt(clock.instant());
             r.putPlayer(p.getId(), p);
             r.putMember(token, new Member(token, MemberKind.PLAYER, p.getId(), null));
             registry.indexToken(token, r);
-            if (r.getCaptainId() == null || r.getPlayers().get(r.getCaptainId()).isRemoved()) {
+            PlayerState captain =
+                    r.getCaptainId() == null ? null : r.getPlayers().get(r.getCaptainId());
+            if (captain == null || captain.isRemoved() || captain.isBot()) {
                 r.setCaptainId(p.getId());
             }
             if (r.getPhase() == Phase.LOBBY) {
@@ -426,6 +437,7 @@ public class GameEngineService implements GameRuntimeService {
                 andReply(c -> c.room()
                         .setCaptainId(GameRuleUtils.activePlayer(c.room(), c.text("playerId"))
                                 .getId())));
+        table.put(CommandType.BOT_ADD, andReply(c -> addBot(c.room())));
         table.put(
                 CommandType.ROOM_LOCK,
                 andReply(c -> c.room().setLocked(c.data().path("locked").asBoolean(true))));
@@ -463,6 +475,63 @@ public class GameEngineService implements GameRuntimeService {
         };
     }
 
+    /**
+     * A test bot takes a player's seat (roadmap R34): always connected, never captain while a person plays, and played
+     * by {@link BotPlayerHandler}. Its token is never handed out. Only in rooms an admin created.
+     */
+    private void addBot(RoomState r) {
+        if (!r.isBotsAllowed()) {
+            throw new ApiException(ErrorCode.NOT_ALLOWED, "Bots are only for rooms an admin creates.");
+        }
+        if (r.getPhase() != Phase.LOBBY && r.getPhase() != Phase.INTAKE) {
+            throw new ApiException(ErrorCode.ROOM_IN_PROGRESS);
+        }
+        if (r.activePlayers().size() >= props.maxPlayers()) {
+            throw new ApiException(ErrorCode.ROOM_FULL);
+        }
+        Set<String> taken = r.activePlayers().stream().map(PlayerState::getName).collect(Collectors.toSet());
+        String name = fallback.botName(r.getSettings().language(), taken, random);
+        PlayerState bot =
+                new PlayerState(r.nextId("p"), name, EMOJIS.get(random.nextInt(EMOJIS.size())), clock.instant(), true);
+        bot.addConnections(1);
+        String token = TokenUtils.random(18);
+        r.putPlayer(bot.getId(), bot);
+        r.putMember(token, new Member(token, MemberKind.PLAYER, bot.getId(), null));
+        checkPlayerCount(r);
+    }
+
+    /**
+     * Sends a bot's planned move as its own command; a refused one may be tried once more in another way. A move that
+     * comes due while the game is paused is dropped and planned again once it resumes.
+     */
+    private void playBot(RoomState room, BotPlayerHandler.Move move) {
+        if (registry.find(room.getCode()).orElse(null) != room) {
+            return;
+        }
+        room.call(r -> {
+                    if (r.getPause() != null) {
+                        r.forgetBotStep(move.step());
+                        return Optional.<Member>empty();
+                    }
+                    return r.memberOf(move.playerId());
+                })
+                .ifPresent(m -> run(room, m, move.command().wire(), move.data(), new ReplyHandler() {
+                    @Override
+                    public void ok(Map<String, Object> data) {
+                        // Bots don't read replies.
+                    }
+
+                    @Override
+                    public void error(ApiException e) {
+                        bots.afterRefusal(move).ifPresent(retry -> scheduleBot(room, retry));
+                    }
+                }));
+    }
+
+    private void scheduleBot(RoomState room, BotPlayerHandler.Move move) {
+        scheduler.schedule(() -> playBot(room, move), move.delayMs(), TimeUnit.MILLISECONDS);
+    }
+
     private void quickFeedback(GameCommand c) {
         int score = c.data().path("score").asInt(0);
         if (score < 1 || score > 3) {
@@ -478,13 +547,14 @@ public class GameEngineService implements GameRuntimeService {
 
     /** Applies a change under the room lock, then schedules a snapshot and the next timer. */
     public void mutate(RoomState room, Consumer<RoomState> change) {
-        room.call(r -> {
+        List<BotPlayerHandler.Move> botMoves = room.call(r -> {
             change.accept(r);
             r.addVersion(1);
             r.setLastActivity(clock.instant());
             reschedule(r);
-            return null;
+            return bots.plan(r);
         });
+        botMoves.forEach(move -> scheduleBot(room, move));
         events.changed(room);
     }
 
@@ -607,7 +677,7 @@ public class GameEngineService implements GameRuntimeService {
         if (r.getCaptainId() == null
                 || !r.getPlayers().get(r.getCaptainId()).present(nowInstant, props.disconnectGrace())) {
             r.activePlayers().stream()
-                    .filter(p -> p.present(nowInstant, props.disconnectGrace()))
+                    .filter(p -> !p.isBot() && p.present(nowInstant, props.disconnectGrace()))
                     .findFirst()
                     .ifPresent(p -> r.setCaptainId(p.getId()));
         }

@@ -24,7 +24,7 @@ class FallbackContentServiceTest {
             new FallbackContentService(JsonMapper.builder().build());
 
     private static PlayerState player(String id, String name, String intake) {
-        PlayerState p = new PlayerState(id, name, "🦊", Instant.EPOCH);
+        PlayerState p = new PlayerState(id, name, "🦊", Instant.EPOCH, false);
         p.getIntake()[0] = intake;
         return p;
     }

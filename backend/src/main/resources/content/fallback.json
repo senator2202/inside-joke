@@ -312,5 +312,31 @@
     "didntAnswer": "[{name} didn't answer]",
     "toldMe": "{name} told me: “{text}”",
     "hostPicks": "Nobody picked? Then I choose."
+  },
+  "bots": {
+    "names": [
+      "Robo Rita",
+      "Bleep Bob",
+      "Circuit Sam",
+      "Pixel Pam",
+      "Gizmo Gus",
+      "Byte Bea",
+      "Sprocket Sue",
+      "Widget Walt"
+    ],
+    "answers": [
+      "My plants, obviously",
+      "A very confident pigeon",
+      "Whatever my mom says",
+      "Pineapple on everything",
+      "Three raccoons in a coat",
+      "Karaoke at 3 a.m.",
+      "The group chat, again",
+      "A nap that lasted a week",
+      "Socks with sandals",
+      "My ex's playlist",
+      "Forgetting why I came in",
+      "A suspiciously cheap sushi place"
+    ]
   }
 }

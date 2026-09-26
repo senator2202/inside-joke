@@ -11,6 +11,9 @@ public final class PlayerState {
     private final Instant joinedAt;
     private final String name;
     private final String emoji;
+    /** A bot added by an admin for testing (roadmap R34): always connected, played by {@link BotPlayerHandler}. */
+    private final boolean bot;
+
     private int connections;
     private Instant disconnectedAt;
     private boolean removed;
@@ -30,11 +33,12 @@ public final class PlayerState {
     private int correctGuesses;
     private int whoPicks;
 
-    PlayerState(String id, String name, String emoji, Instant joinedAt) {
+    PlayerState(String id, String name, String emoji, Instant joinedAt, boolean bot) {
         this.id = id;
         this.name = name;
         this.emoji = emoji;
         this.joinedAt = joinedAt;
+        this.bot = bot;
     }
 
     boolean connected() {
@@ -108,6 +112,10 @@ public final class PlayerState {
 
     public void setDisconnectedAt(Instant disconnectedAt) {
         this.disconnectedAt = disconnectedAt;
+    }
+
+    public boolean isBot() {
+        return bot;
     }
 
     public boolean isRemoved() {
