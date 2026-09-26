@@ -113,7 +113,10 @@ public class RoomProjectionService {
                         r.getSettings().length(),
                         r.getSettings().mode(),
                         r.getSettings().hideCode(),
-                        r.getSettings().language().code()),
+                        r.getSettings().language().code(),
+                        r.getSettings().company(),
+                        // The owner's line about the group stays on the owner's screen: never on a stream.
+                        owner ? r.getSettings().context() : null),
                 lobby,
                 role == Role.AUDIENCE ? null : players(r),
                 you(r, role, me),

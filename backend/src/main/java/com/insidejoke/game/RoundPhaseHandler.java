@@ -108,7 +108,7 @@ final class RoundPhaseHandler {
                             GameRuleUtils.contentKey(r, r.getRoundNumber()),
                             fallback.round(
                                     r.getSettings().language(),
-                                    r.getSettings().tone(),
+                                    r.getSettings().contentTone(),
                                     runtime.presentPlayers(r),
                                     r.getRecentPrompts(),
                                     random));
@@ -140,7 +140,7 @@ final class RoundPhaseHandler {
             if (generated == null) {
                 generated = fallback.round(
                         room.getSettings().language(),
-                        room.getSettings().tone(),
+                        room.getSettings().contentTone(),
                         runtime.presentPlayers(room),
                         room.getRecentPrompts(),
                         random);
@@ -169,6 +169,8 @@ final class RoundPhaseHandler {
                 .toList();
         return new HostAiService.RoundParams(
                 r.getSettings().tone(),
+                r.getSettings().company(),
+                r.getSettings().context(),
                 r.getSettings().language(),
                 n,
                 r.getRoundsTotal(),
@@ -189,7 +191,11 @@ final class RoundPhaseHandler {
                 prompts.removeIf(p -> r.getRecentPrompts().contains(p.text()));
                 if (prompts.size() < present.size()) {
                     RoundContent extra = fallback.round(
-                            r.getSettings().language(), r.getSettings().tone(), present, r.getRecentPrompts(), random);
+                            r.getSettings().language(),
+                            r.getSettings().contentTone(),
+                            present,
+                            r.getRecentPrompts(),
+                            random);
                     prompts.addAll(extra.duelPrompts());
                 }
                 int n = present.size();
@@ -234,7 +240,7 @@ final class RoundPhaseHandler {
                         ? proposed
                         : fallback.round(
                                         r.getSettings().language(),
-                                        r.getSettings().tone(),
+                                        r.getSettings().contentTone(),
                                         present,
                                         r.getRecentPrompts(),
                                         random)

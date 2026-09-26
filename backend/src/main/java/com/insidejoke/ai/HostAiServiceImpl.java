@@ -2,6 +2,7 @@ package com.insidejoke.ai;
 
 import com.insidejoke.common.Language;
 import com.insidejoke.common.TokenUtils;
+import com.insidejoke.game.Company;
 import com.insidejoke.game.Finale;
 import com.insidejoke.game.GameProperties;
 import com.insidejoke.game.HostAiService;
@@ -17,6 +18,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
@@ -42,7 +44,7 @@ import tools.jackson.databind.json.JsonMapper;
 @Service
 public class HostAiServiceImpl implements HostAiService {
 
-    static final String ROUND_PROMPT = "round_gen.v2";
+    static final String ROUND_PROMPT = "round_gen.v3";
     static final String REVIEW_PROMPT = "duel_review.v2";
     static final String FINALE_PROMPT = "finale.v2";
     static final String MODERATION_PROMPT = "moderation.v2";
@@ -69,6 +71,8 @@ public class HostAiServiceImpl implements HostAiService {
     private final JsonMapper json;
     private final Clock clock;
     private final Map<String, String> prompts = new HashMap<>();
+    /** Sample prompts for the round prompt, one file per language (prompts/round_examples.<code>.txt). */
+    private final Map<Language, String> roundExamples = new EnumMap<>(Language.class);
 
     public HostAiServiceImpl(
             AnthropicClient llm,
@@ -93,6 +97,9 @@ public class HostAiServiceImpl implements HostAiService {
         this.clock = clock;
         for (String name : List.of(ROUND_PROMPT, REVIEW_PROMPT, FINALE_PROMPT, MODERATION_PROMPT)) {
             prompts.put(name, load(name));
+        }
+        for (Language language : Language.values()) {
+            roundExamples.put(language, load("round_examples." + language.code()));
         }
         if (!llm.enabled()) {
             log.warn(
@@ -122,6 +129,26 @@ public class HostAiServiceImpl implements HostAiService {
         };
     }
 
+    /** Who came, for the round prompt (roadmap R39): what fits this group and what to stay away from. */
+    static String companyGuide(Company company) {
+        return switch (company) {
+            case FRIENDS ->
+                "Close friends who know each other well. Roast freely, lean on shared history and running jokes.";
+            case COLLEAGUES ->
+                "Coworkers. Workplace-safe only: meetings, chats, lunch, commute, desk habits, office legends. No dating, "
+                        + "exes, alcohol, bodies, salaries or anything HR would flag. Tease habits, never competence.";
+            case FAMILY ->
+                "A family, maybe with kids and grandparents: home habits, holidays, chores, family legends. Clean, "
+                        + "nothing about dating or drinking, and nobody made to look foolish in front of the kids.";
+            case COUPLES ->
+                "Couples, maybe a double date: habits at home, who does what, how they met, light flirting. Never "
+                        + "jealousy, cheating, exes or breakups.";
+            case ACQUAINTANCES ->
+                "People who have only just met. Assume no shared history: every prompt must be answerable by anyone and "
+                        + "help them learn something about each other. Tease situations, not people.";
+        };
+    }
+
     // ------------------------------------------------------------------ round content
 
     @Override
@@ -129,6 +156,8 @@ public class HostAiServiceImpl implements HostAiService {
         int promptCount = Math.max(req.players().size(), game.minPlayers());
         String system = prompts.get(ROUND_PROMPT)
                 .replace("{{tone}}", toneGuide(req.tone()))
+                .replace("{{company}}", companyGuide(req.company()))
+                .replace("{{examples}}", roundExamples.get(req.language()).strip())
                 .replace("{{language}}", req.language().englishName())
                 .replace("{{who_of_us}}", req.language().whoOfUs())
                 .replace("{{prompt_count}}", Integer.toString(promptCount))
@@ -137,6 +166,9 @@ public class HostAiServiceImpl implements HostAiService {
                         req.recentPrompts().isEmpty() ? "(none)" : String.join(" | ", req.recentPrompts()));
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("round", req.roundNumber() + " of " + req.roundsTotal());
+        if (req.context() != null) {
+            data.put("group", req.context());
+        }
         data.put(
                 "players",
                 req.players().stream()

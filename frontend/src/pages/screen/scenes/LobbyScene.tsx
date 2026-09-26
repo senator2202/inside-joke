@@ -3,7 +3,7 @@ import { Button } from "../../../components/Button";
 import { Avatar } from "../../../components/game/Avatar";
 import { HostLine } from "../../../components/game/HostLine";
 import { JoinQr } from "../../../components/game/JoinQr";
-import { LENGTH_ORDER, TONE_ORDER } from "../../../lib/game/labels";
+import { CLEAN_COMPANIES, COMPANY_ORDER, LENGTH_ORDER, TONE_ORDER } from "../../../lib/game/labels";
 import { LANGUAGES, useI18n } from "../../../lib/i18n";
 import styles from "../Screen.module.css";
 import { type SceneProps } from "./shared";
@@ -105,6 +105,7 @@ export function LobbyScene({ state, owner, send }: SceneProps) {
         )}
         <HostLine text={state.host?.text} />
         <div className={styles.settingsStrip}>
+          <span>{t(`company.${state.settings.company ?? "FRIENDS"}.title`)}</span>
           <span>{t(`tone.${state.settings.tone}.title`)}</span>
           <span>
             {t("lobby.lengthRounds", {
@@ -132,12 +133,30 @@ function SettingsEditor({ state, send }: Pick<SceneProps, "state" | "send">) {
   const [spicyAsk, setSpicyAsk] = useState(false);
   return (
     <div className={styles.editor}>
+      <div role="group" aria-label={t("new.company")}>
+        {COMPANY_ORDER.map((company) => (
+          <button
+            key={company}
+            type="button"
+            aria-pressed={(state.settings.company ?? "FRIENDS") === company}
+            onClick={() =>
+              send(
+                "game.settings",
+                state.settings.tone === "SPICY" && CLEAN_COMPANIES.has(company) ? { company, tone: "CHEEKY" } : { company },
+              )
+            }
+          >
+            {t(`company.${company}.title`)}
+          </button>
+        ))}
+      </div>
       <div role="group" aria-label={t("new.tone")}>
         {TONE_ORDER.map((tone) => (
           <button
             key={tone}
             type="button"
             aria-pressed={state.settings.tone === tone}
+            disabled={tone === "SPICY" && CLEAN_COMPANIES.has(state.settings.company ?? "FRIENDS")}
             onClick={() => (tone === "SPICY" && state.settings.tone !== "SPICY" ? setSpicyAsk(true) : send("game.settings", { tone }))}
           >
             {t(`tone.${tone}.title`)}

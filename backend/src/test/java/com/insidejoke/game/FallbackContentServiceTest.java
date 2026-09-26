@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.insidejoke.common.Language;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -13,6 +14,8 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.core.io.ClassPathResource;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 class FallbackContentServiceTest {
@@ -126,5 +129,30 @@ class FallbackContentServiceTest {
         RoundContent russian = content.round(Language.RU, Tone.FAMILY, List.of(ru), Set.of(), new Random(3));
         assertThat(russian.truth().truthStatement()).isEqualTo("Маша рассказывает: «Собираю ложки»");
         assertThat(russian.truth().fakeStatement()).contains("Маша");
+    }
+
+    /** Tired patterns the round prompt forbids (roadmap R39): the prewritten content must not use them either. */
+    private static final Pattern CLICHE = Pattern.compile(
+            "(?iu)тот самый человек|в трёх словах|the kind of person who|in three words|^(?:the )?worst |^худш");
+
+    @ParameterizedTest
+    @EnumSource(Language.class)
+    void prewrittenContentHasNoTiredPatterns(Language language) throws Exception {
+        String file =
+                language == Language.EN ? "content/fallback.json" : "content/fallback." + language.code() + ".json";
+        JsonNode root;
+        try (var in = new ClassPathResource(file).getInputStream()) {
+            root = JsonMapper.builder().build().readTree(in);
+        }
+        List<String> tired = new ArrayList<>();
+        for (String section : List.of("intake", "duelPrompts", "whoOfUs", "fakeFacts")) {
+            root.path(section)
+                    .forEach(tone -> tone.forEach(item -> {
+                        if (CLICHE.matcher(item.asString()).find()) {
+                            tired.add(item.asString());
+                        }
+                    }));
+        }
+        assertThat(tired).as(file).isEmpty();
     }
 }

@@ -68,6 +68,16 @@ describe("Lobby (S1)", () => {
     expect(screen.queryByRole("button", { name: "🤖 Add a bot" })).not.toBeInTheDocument();
   });
 
+  it("lets the owner say who came, leaving Spicy out for coworkers", () => {
+    const base = roomState({ you: owner });
+    const p = props({ ...base, settings: { ...base.settings, tone: "SPICY", company: "FRIENDS" } });
+    render(<LobbyScene {...p} />);
+    expect(screen.getByText("Friends")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Change" }));
+    fireEvent.click(screen.getByRole("button", { name: "Colleagues" }));
+    expect(p.sent).toEqual([{ type: "game.settings", data: { company: "COLLEAGUES", tone: "CHEEKY" } }]);
+  });
+
   it("asks before switching an open room to Spicy", () => {
     const p = props(roomState({ you: owner }));
     render(<LobbyScene {...p} />);

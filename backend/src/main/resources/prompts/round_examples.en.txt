@@ -1,0 +1,7 @@
+- Specific: "Ann's shopping list that the police found. What's on it?"
+- Misdirection: "Ben swears he has quit food delivery. The courier just greeted him by name. Explain."
+- Escalation: "Cat has 47 unread group chats. What is the 48th one called?"
+- Rule of three: "Dan's three rules for a party: bring snacks, leave on time, and…"
+- Crowd work, from an intake answer ("karaoke"): "Eve loves karaoke. Which song is she no longer allowed to sing in this bar?"
+- Who of us: "Who of us has a 'secret' that everyone at this table already knows?"
+- Truth or AI, written like a real secret: "Fay once returned a sofa to the store after hosting a party on it. The store remembers her."

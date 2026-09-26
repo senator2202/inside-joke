@@ -6,14 +6,16 @@ import { Notice } from "../../components/Notice";
 import { api, isApiError } from "../../lib/api";
 import { fetchAccess, formatPassEnd, type AccessStatus } from "../../lib/billing";
 import { useAuth } from "../../lib/auth";
-import { LENGTH_ORDER, TONE_ORDER } from "../../lib/game/labels";
+import { CLEAN_COMPANIES, COMPANY_ORDER, LENGTH_ORDER, MAX_CONTEXT_CHARS, TONE_ORDER } from "../../lib/game/labels";
 import { loadPref, saveSeat, savePref } from "../../lib/game/storage";
-import type { GameLength, RoomMode, Tone } from "../../lib/game/types";
+import type { Company, GameLength, RoomMode, Tone } from "../../lib/game/types";
 import { unlockAudio } from "../../lib/game/useHostVoice";
 import { LANGUAGES, isLang, makeI18n, useI18n, type I18n, type Lang } from "../../lib/i18n";
 import styles from "./NewPartyPage.module.css";
 
 interface Choice {
+  company: Company;
+  context: string;
   tone: Tone;
   length: GameLength;
   mode: RoomMode;
@@ -24,15 +26,19 @@ interface Choice {
 function lastChoice(uiLanguage: Lang): Choice {
   try {
     const saved = JSON.parse(loadPref("newParty") ?? "{}") as Partial<Choice>;
+    const company = saved.company && COMPANY_ORDER.includes(saved.company) ? saved.company : "FRIENDS";
+    const tone = saved.tone && TONE_ORDER.includes(saved.tone) ? saved.tone : "CHEEKY";
     return {
-      tone: saved.tone && TONE_ORDER.includes(saved.tone) ? saved.tone : "CHEEKY",
+      company,
+      context: typeof saved.context === "string" ? saved.context.slice(0, MAX_CONTEXT_CHARS) : "",
+      tone: tone === "SPICY" && CLEAN_COMPANIES.has(company) ? "CHEEKY" : tone,
       length: saved.length === "LONG" ? "LONG" : "SHORT",
       mode: saved.mode === "STREAMER" ? "STREAMER" : "STANDARD",
       hideCode: saved.hideCode === true,
       language: isLang(saved.language) ? saved.language : uiLanguage,
     };
   } catch {
-    return { tone: "CHEEKY", length: "SHORT", mode: "STANDARD", hideCode: false, language: uiLanguage };
+    return { company: "FRIENDS", context: "", tone: "CHEEKY", length: "SHORT", mode: "STANDARD", hideCode: false, language: uiLanguage };
   }
 }
 
@@ -63,6 +69,8 @@ export function NewPartyPage() {
   const [status, setStatus] = useState<AccessStatus | null>(null);
   const [confirmSpicy, setConfirmSpicy] = useState(false);
   const [adultsConfirmed, setAdultsConfirmed] = useState(false);
+  /** The 18+ question was asked by "Create room" itself: a "Yes" goes on to create the room. */
+  const [createAfterConfirm, setCreateAfterConfirm] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,6 +91,9 @@ export function NewPartyPage() {
     );
   if (!me) return <Navigate to={`/login?returnTo=${encodeURIComponent("/new")}`} replace />;
 
+  const pickCompany = (company: Company) =>
+    setChoice((c) => ({ ...c, company, tone: c.tone === "SPICY" && CLEAN_COMPANIES.has(company) ? "CHEEKY" : c.tone }));
+
   const pickTone = (tone: Tone) => {
     if (tone === "SPICY" && !adultsConfirmed) {
       setConfirmSpicy(true);
@@ -91,7 +102,13 @@ export function NewPartyPage() {
     setChoice((c) => ({ ...c, tone }));
   };
 
-  const create = async () => {
+  const create = async (adults = adultsConfirmed) => {
+    // Spicy restored from last time was never confirmed for tonight's party: ask first (the server insists too).
+    if (choice.tone === "SPICY" && !adults) {
+      setCreateAfterConfirm(true);
+      setConfirmSpicy(true);
+      return;
+    }
     unlockAudio();
     setCreating(true);
     setError(null);
@@ -99,7 +116,11 @@ export function NewPartyPage() {
     try {
       const room = await api<{ code: string; screenToken: string; joinUrl: string }>("/api/rooms", {
         method: "POST",
-        body: { ...choice, adultsConfirmed: choice.tone === "SPICY" ? adultsConfirmed : undefined },
+        body: {
+          ...choice,
+          context: choice.context.trim() || undefined,
+          adultsConfirmed: choice.tone === "SPICY" ? adults : undefined,
+        },
       });
       saveSeat(room.code, { token: room.screenToken, kind: "owner" });
       void navigate(`/screen/${room.code}`);
@@ -109,7 +130,13 @@ export function NewPartyPage() {
         void navigate(`/login?returnTo=${encodeURIComponent("/new")}`);
         return;
       }
-      setError(isApiError(e, "DRAIN_MODE") ? i18n.error("DRAIN_MODE") : t("new.createFailed"));
+      setError(
+        isApiError(e, "DRAIN_MODE") || isApiError(e, "RATE_LIMITED")
+          ? i18n.error(e.code)
+          : isApiError(e, "VALIDATION_FAILED") && e.details.fields?.context
+            ? t("new.contextInvalid")
+            : t("new.createFailed"),
+      );
     }
   };
 
@@ -126,11 +153,53 @@ export function NewPartyPage() {
         )}
 
         <fieldset className={styles.group}>
+          <legend>{t("new.company")}</legend>
+          <p className={styles.groupHint}>{t("new.companyHint")}</p>
+          <div className={styles.cards}>
+            {COMPANY_ORDER.map((company) => (
+              <label key={company} className={styles.card} data-selected={choice.company === company || undefined}>
+                <input
+                  type="radio"
+                  name="company"
+                  value={company}
+                  checked={choice.company === company}
+                  onChange={() => pickCompany(company)}
+                />
+                <span className={styles.cardTitle}>{t(`company.${company}.title`)}</span>
+                <span className={styles.cardSample}>{t(`company.${company}.detail`)}</span>
+              </label>
+            ))}
+          </div>
+          <label className={styles.context}>
+            <span>{t("new.context")}</span>
+            <input
+              type="text"
+              value={choice.context}
+              maxLength={MAX_CONTEXT_CHARS}
+              placeholder={t("new.contextPlaceholder")}
+              onChange={(e) => setChoice((c) => ({ ...c, context: e.target.value }))}
+            />
+          </label>
+        </fieldset>
+
+        <fieldset className={styles.group}>
           <legend>{t("new.tone")}</legend>
           <div className={styles.cards}>
             {TONE_ORDER.map((tone) => (
-              <label key={tone} className={styles.card} data-selected={choice.tone === tone || undefined}>
-                <input type="radio" name="tone" value={tone} checked={choice.tone === tone} onChange={() => pickTone(tone)} />
+              <label
+                key={tone}
+                className={styles.card}
+                data-selected={choice.tone === tone || undefined}
+                data-disabled={(tone === "SPICY" && CLEAN_COMPANIES.has(choice.company)) || undefined}
+              >
+                <input
+                  type="radio"
+                  name="tone"
+                  value={tone}
+                  checked={choice.tone === tone}
+                  disabled={tone === "SPICY" && CLEAN_COMPANIES.has(choice.company)}
+                  onChange={() => pickTone(tone)}
+                />
                 <span className={styles.cardTitle}>{t(`tone.${tone}.title`)}</span>
                 <span className={styles.cardSample}>{t(`tone.${tone}.sample`)}</span>
               </label>
@@ -242,6 +311,10 @@ export function NewPartyPage() {
                   setAdultsConfirmed(true);
                   setChoice((c) => ({ ...c, tone: "SPICY" }));
                   setConfirmSpicy(false);
+                  if (createAfterConfirm) {
+                    setCreateAfterConfirm(false);
+                    void create(true);
+                  }
                 }}
               >
                 {t("common.yes")}
@@ -251,6 +324,7 @@ export function NewPartyPage() {
                 onClick={() => {
                   setChoice((c) => ({ ...c, tone: "CHEEKY" }));
                   setConfirmSpicy(false);
+                  setCreateAfterConfirm(false);
                 }}
               >
                 {t("new.chooseCheeky")}

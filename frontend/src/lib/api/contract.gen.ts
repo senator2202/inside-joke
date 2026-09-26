@@ -135,6 +135,8 @@ export interface CodeSentDto {
   resendAfterSeconds: number;
 }
 
+export type Company = "FRIENDS" | "COLLEAGUES" | "FAMILY" | "COUPLES" | "ACQUAINTANCES";
+
 export interface CreateRoomRequestDto {
   tone: string;
   length: string;
@@ -142,6 +144,8 @@ export interface CreateRoomRequestDto {
   hideCode: boolean;
   adultsConfirmed: boolean;
   language: string;
+  company: string;
+  context: string;
 }
 
 export interface CreatedRoomDto {
@@ -472,6 +476,8 @@ export interface RoomSettingsDto {
   mode?: RoomMode;
   hideCode: boolean;
   language?: string;
+  company?: Company;
+  context?: string;
 }
 
 export interface RoomStateDto {

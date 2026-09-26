@@ -26,8 +26,11 @@ public interface HostAiService {
 
     record Fact(String id, String aboutPlayerId, String text) {}
 
+    /** What the host needs to write a round; {@code context} is the owner's line about the group, or null. */
     record RoundParams(
             Tone tone,
+            Company company,
+            String context,
             Language language,
             int roundNumber,
             int roundsTotal,

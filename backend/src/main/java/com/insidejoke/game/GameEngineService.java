@@ -49,7 +49,7 @@ public class GameEngineService implements GameRuntimeService {
     public static final List<String> EMOJIS = List.of(
             "🦊", "🐙", "🦄", "🐸", "🐼", "🦉", "🐯", "🐨", "🦖", "🐝", "🦩", "🐳", "🦔", "🐲", "🦜", "🐢", "🦀", "🐧",
             "🦦", "🐞", "🍄", "🌵", "🍩", "🎸");
-    public static final String PROMPT_VERSION = "round_gen.v2";
+    public static final String PROMPT_VERSION = "round_gen.v3";
 
     public record JoinedPlayer(String playerId, String token) {}
 
@@ -155,7 +155,7 @@ public class GameEngineService implements GameRuntimeService {
             RoomState r = new RoomState(code, audienceKey, ownerUserId, TokenUtils.random(18), roomSettings, now);
             r.putMember(r.getOwnerToken(), new Member(r.getOwnerToken(), MemberKind.OWNER_SCREEN, null, null));
             r.setBotsAllowed(botsAllowed);
-            r.setIntakeQuestions(fallback.intakeQuestions(roomSettings.language(), roomSettings.tone(), random));
+            r.setIntakeQuestions(fallback.intakeQuestions(roomSettings.language(), roomSettings.contentTone(), random));
             return r;
         });
         mutate(room, r -> say(r, line(r, "lobbyWaiting", Map.of()), Set.of()));
@@ -170,7 +170,9 @@ public class GameEngineService implements GameRuntimeService {
                         "mode",
                         roomSettings.mode().name(),
                         "language",
-                        roomSettings.language().code()));
+                        roomSettings.language().code(),
+                        "company",
+                        roomSettings.company().name()));
         return room;
     }
 

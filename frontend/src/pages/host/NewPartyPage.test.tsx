@@ -1,7 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { loadSeat } from "../../lib/game/storage";
+import { loadSeat, savePref } from "../../lib/game/storage";
 import { apiError, mockFetch } from "../../test/fetchMock";
 import { renderRoute } from "../../test/render";
 import { NewPartyPage, accessLine, type AccessStatus } from "./NewPartyPage";
@@ -42,6 +42,7 @@ describe("NewPartyPage", () => {
     await user.click(screen.getByRole("button", { name: "Create room" }));
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/screen/KWMP"));
     expect(mock.callsTo("POST /api/rooms")[0]!.body).toEqual({
+      company: "FRIENDS",
       tone: "CHEEKY",
       length: "LONG",
       mode: "STREAMER",
@@ -49,6 +50,60 @@ describe("NewPartyPage", () => {
       language: "en",
     });
     expect(loadSeat("KWMP", "owner")?.token).toBe("owner-tok");
+  });
+
+  it("tells the host who came, and keeps coworkers away from Spicy", async () => {
+    const mock = mockFetch({
+      "GET /api/me": { status: 200, body: me },
+      "GET /api/billing/passes": { status: 200, body: free },
+      "POST /api/rooms": { status: 201, body: { code: "BCDF", screenToken: "t", joinUrl: "x" } },
+    });
+    renderRoute("/new", "/new", <NewPartyPage />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByLabelText(/Spicy 18\+/));
+    await user.click(screen.getByRole("button", { name: "Yes" }));
+    expect(screen.getByLabelText(/Spicy 18\+/)).toBeChecked();
+
+    await user.click(screen.getByLabelText(/Colleagues/));
+    expect(screen.getByLabelText(/Spicy 18\+/)).toBeDisabled();
+    expect(screen.getByLabelText(/Cheeky/)).toBeChecked();
+    await user.type(screen.getByLabelText("A few words about the group (optional)"), "  sales team  ");
+    await user.click(screen.getByRole("button", { name: "Create room" }));
+    await waitFor(() => expect(mock.callsTo("POST /api/rooms")).toHaveLength(1));
+    expect(mock.callsTo("POST /api/rooms")[0]!.body).toMatchObject({ company: "COLLEAGUES", context: "sales team", tone: "CHEEKY" });
+  });
+
+  it("asks about 18+ again when Spicy comes back from last time, then creates the room", async () => {
+    savePref("newParty", JSON.stringify({ tone: "SPICY", length: "SHORT", mode: "STANDARD", language: "en" }));
+    const mock = mockFetch({
+      "GET /api/me": { status: 200, body: me },
+      "GET /api/billing/passes": { status: 200, body: free },
+      "POST /api/rooms": { status: 201, body: { code: "BCDF", screenToken: "t", joinUrl: "x" } },
+    });
+    renderRoute("/new", "/new", <NewPartyPage />);
+    const user = userEvent.setup();
+    expect(await screen.findByLabelText(/Spicy 18\+/)).toBeChecked();
+    await user.click(screen.getByRole("button", { name: "Create room" }));
+    expect(screen.getByRole("dialog", { name: "Is everyone over 18?" })).toBeInTheDocument();
+    expect(mock.callsTo("POST /api/rooms")).toHaveLength(0);
+
+    await user.click(screen.getByRole("button", { name: "Yes" }));
+    await waitFor(() => expect(mock.callsTo("POST /api/rooms")).toHaveLength(1));
+    expect(mock.callsTo("POST /api/rooms")[0]!.body).toMatchObject({ tone: "SPICY", adultsConfirmed: true });
+  });
+
+  it("says why a room couldn't be created when it knows", async () => {
+    mockFetch({
+      "GET /api/me": { status: 200, body: me },
+      "GET /api/billing/passes": { status: 200, body: free },
+      "POST /api/rooms": [apiError(429, "RATE_LIMITED"), apiError(400, "VALIDATION_FAILED", { fields: { context: "too long" } })],
+    });
+    renderRoute("/new", "/new", <NewPartyPage />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Create room" }));
+    expect(await screen.findByText("Too many attempts. Wait a minute.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Create room" }));
+    expect(await screen.findByText(/Shorten the description of the group/)).toBeInTheDocument();
   });
 
   it("asks whether everyone is over 18 before choosing Spicy", async () => {

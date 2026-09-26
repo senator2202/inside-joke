@@ -63,6 +63,13 @@ final class LobbyPhaseHandler {
                                 "Choose en or ru.",
                                 Map.of("fields", Map.of("language", "en or ru"))))
                 : r.getSettings().language();
+        Company company = data.has("company")
+                ? GameRuleUtils.enumValue(Company.class, data.path("company").asString(""))
+                : r.getSettings().company();
+        String context = data.has("context")
+                ? GameRuleUtils.groupContext(data.path("context").asString(""))
+                : r.getSettings().context();
+        GameRuleUtils.requireFits(company, tone);
         if (tone == Tone.SPICY
                 && r.getSettings().tone() != Tone.SPICY
                 && !data.path("adultsConfirmed").asBoolean(false)) {
@@ -71,16 +78,20 @@ final class LobbyPhaseHandler {
                     "Confirm that every player is over 18.",
                     Map.of("fields", Map.of("adultsConfirmed", "required")));
         }
-        boolean contentChanged =
-                tone != r.getSettings().tone() || language != r.getSettings().language();
-        r.setSettings(new RoomSettings(
+        boolean contentChanged = tone != r.getSettings().tone()
+                || language != r.getSettings().language()
+                || company != r.getSettings().company();
+        RoomSettings changed = new RoomSettings(
                 tone,
                 length,
                 r.getSettings().mode(),
                 hideCode && r.getSettings().mode() == RoomMode.STREAMER,
-                language));
+                language,
+                company,
+                context);
+        r.setSettings(changed);
         if (contentChanged && r.getGameNumber() == 0) {
-            r.setIntakeQuestions(fallback.intakeQuestions(language, tone, random));
+            r.setIntakeQuestions(fallback.intakeQuestions(language, changed.contentTone(), random));
         }
     }
     // ------------------------------------------------------------------ lifecycle: start, play again, finale, close

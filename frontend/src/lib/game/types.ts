@@ -6,6 +6,8 @@ export type Role = "OWNER_SCREEN" | "CAPTAIN" | "PLAYER" | "SCREEN" | "AUDIENCE"
 export type Tone = "FAMILY" | "CHEEKY" | "SPICY";
 export type GameLength = "SHORT" | "LONG";
 export type RoomMode = "STANDARD" | "STREAMER";
+/** Who came to the party (roadmap R39). */
+export type Company = "FRIENDS" | "COLLEAGUES" | "FAMILY" | "COUPLES" | "ACQUAINTANCES";
 export type PauseReason = "OWNER" | "SCREEN_LOST" | "WAITING_FOR_PLAYERS";
 
 export interface PlayerView {
@@ -99,7 +101,16 @@ export interface RoomView {
   waiting?: { deadline: number; missing: string[] };
   thinking: boolean;
   locked: boolean;
-  settings: { tone: Tone; length: GameLength; mode: RoomMode; hideCode: boolean; language?: string };
+  settings: {
+    tone: Tone;
+    length: GameLength;
+    mode: RoomMode;
+    hideCode: boolean;
+    language?: string;
+    company?: Company;
+    /** The owner's line about the group; only on the owner's screen. */
+    context?: string;
+  };
   lobby?: {
     joinUrl?: string;
     audienceUrl?: string;

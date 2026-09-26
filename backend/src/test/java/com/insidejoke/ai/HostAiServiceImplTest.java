@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.insidejoke.common.Language;
+import com.insidejoke.game.Company;
 import com.insidejoke.game.GameProperties;
 import com.insidejoke.game.HostAiService;
 import com.insidejoke.game.Tone;
@@ -20,6 +21,7 @@ import com.insidejoke.settings.AppSettingsService;
 import com.insidejoke.support.ManualClock;
 import com.insidejoke.support.PropertyDefaults;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -86,12 +88,50 @@ class HostAiServiceImplTest {
     private static HostAiService.RoundParams roundOne() {
         return new HostAiService.RoundParams(
                 Tone.CHEEKY,
+                Company.FRIENDS,
+                null,
                 Language.EN,
                 1,
                 5,
                 List.of(new HostAiService.PlayerInfo("p1", "Ann", List.of())),
                 List.of(),
                 List.of());
+    }
+
+    @Test
+    void theRoundPromptKnowsWhoCameAndShowsExamplesInTheRoomLanguage() throws Exception {
+        HostAiServiceImpl ai = gateway(true);
+        when(llm.complete(anyString(), anyString(), anyInt())).thenReturn(reply("no JSON"));
+        HostAiService.RoundParams colleagues = new HostAiService.RoundParams(
+                Tone.CHEEKY,
+                Company.COLLEAGUES,
+                "sales team, Friday",
+                Language.RU,
+                1,
+                5,
+                List.of(new HostAiService.PlayerInfo("p1", "Аня", List.of())),
+                List.of(),
+                List.of());
+
+        ai.generateRound(room(false), colleagues);
+
+        ArgumentCaptor<String> system = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> user = ArgumentCaptor.forClass(String.class);
+        verify(llm, times(2)).complete(system.capture(), user.capture(), anyInt());
+        assertThat(system.getValue())
+                .contains(HostAiServiceImpl.companyGuide(Company.COLLEAGUES))
+                .contains("Ложный след")
+                .contains("тот самый человек, который")
+                .doesNotContain("{{");
+        assertThat(user.getValue()).as("the owner's line travels as data").contains("sales team, Friday");
+        assertThat(recordedOutcomes(2)).allMatch(o -> o == AiOutcome.INVALID_JSON);
+    }
+
+    @Test
+    void everyCompanyHasItsOwnGuide() {
+        assertThat(Arrays.stream(Company.values()).map(HostAiServiceImpl::companyGuide))
+                .doesNotHaveDuplicates()
+                .allSatisfy(guide -> assertThat(guide).isNotBlank());
     }
 
     @Test

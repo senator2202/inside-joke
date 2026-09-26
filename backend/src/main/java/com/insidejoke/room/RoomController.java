@@ -6,8 +6,10 @@ import com.insidejoke.common.ApiException;
 import com.insidejoke.common.AppProperties;
 import com.insidejoke.common.ErrorCode;
 import com.insidejoke.common.Language;
+import com.insidejoke.game.Company;
 import com.insidejoke.game.GameEngineService;
 import com.insidejoke.game.GameLength;
+import com.insidejoke.game.GameRuleUtils;
 import com.insidejoke.game.RoomMode;
 import com.insidejoke.game.RoomSettings;
 import com.insidejoke.game.RoomState;
@@ -60,13 +62,18 @@ public class RoomController {
         Language language = body.language() == null
                 ? Language.EN
                 : Language.fromCode(body.language()).orElseThrow(() -> invalid("language", "Choose en or ru."));
+        Company company = body.company() == null ? Company.FRIENDS : parse(Company.class, body.company(), "company");
+        GameRuleUtils.requireFits(company, tone);
+        String context = GameRuleUtils.groupContext(body.context());
         if (tone == Tone.SPICY && !Boolean.TRUE.equals(body.adultsConfirmed())) {
             throw invalid("adultsConfirmed", "Confirm that every player is over 18.");
         }
         boolean hideCode = mode == RoomMode.STREAMER && Boolean.TRUE.equals(body.hideCode());
         // An admin's room may take test bots (roadmap R34).
         RoomState room = engine.createRoom(
-                user.id(), new RoomSettings(tone, length, mode, hideCode, language), admins.isAdmin(user));
+                user.id(),
+                new RoomSettings(tone, length, mode, hideCode, language, company, context),
+                admins.isAdmin(user));
         return new CreatedRoomDto(room.getCode(), room.getOwnerToken(), app.publicUrl() + "/j/" + room.getCode());
     }
 

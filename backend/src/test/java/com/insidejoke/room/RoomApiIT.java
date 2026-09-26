@@ -261,6 +261,32 @@ class RoomApiIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void theHostSaysWhoCameAndTheRoomKeepsItFitting() {
+        ApiClient host = Party.signIn(port, json, FAKE, uniqueEmail("company"));
+        Map<String, Object> colleagues = Map.of(
+                "tone", "CHEEKY", "length", "SHORT", "company", "COLLEAGUES", "context", "  Sales team,   Friday  ");
+        ApiClient.Resp created = host.post("/api/rooms", colleagues);
+        assertThat(created.status()).isEqualTo(201);
+        try (GameSocket screen = GameSocket.connect(
+                port, json, created.json().path("screenToken").asString())) {
+            JsonNode settings = screen.state(s -> s.has("settings")).path("settings");
+            assertThat(settings.path("company").asString()).isEqualTo("COLLEAGUES");
+            assertThat(settings.path("context").asString()).isEqualTo("Sales team, Friday");
+        }
+
+        ApiClient.Resp spicy = host.post(
+                "/api/rooms", Map.of("tone", "SPICY", "length", "SHORT", "company", "FAMILY", "adultsConfirmed", true));
+        assertThat(spicy.status()).isEqualTo(400);
+        assertThat(spicy.errorCode()).isEqualTo("VALIDATION_FAILED");
+        ApiClient.Resp unknown =
+                host.post("/api/rooms", Map.of("tone", "CHEEKY", "length", "SHORT", "company", "PIRATES"));
+        assertThat(unknown.status()).isEqualTo(400);
+        ApiClient.Resp tooLong =
+                host.post("/api/rooms", Map.of("tone", "CHEEKY", "length", "SHORT", "context", "x".repeat(121)));
+        assertThat(tooLong.status()).isEqualTo(400);
+    }
+
+    @Test
     void joinAttemptsAreRateLimitedPerAddress() {
         try (Party party = Party.create(port, json, FAKE, 0)) {
             ApiClient guest = client();
