@@ -147,11 +147,18 @@ class GameAccessServiceIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void hostPassWithGamesLeftIsPreferredOverPartyPass() {
+    void aRunningPartyPassIsSpentBeforeTheHostPassGames() {
         UserEntity host = data.host();
-        data.pass(host.id(), Product.PARTY_PASS);
         data.pass(host.id(), Product.HOST_PASS);
-        assertThat(access.start(request(host.id())).passType()).isEqualTo(Product.HOST_PASS.name());
+        data.pass(host.id(), Product.PARTY_PASS);
+        assertThat(access.start(request(host.id())).passType()).isEqualTo(Product.PARTY_PASS.name());
+        assertThat(access.status(host.id()).nextGame()).isEqualTo(Product.PARTY_PASS.name());
+        assertThat(access.status(host.id()).passes())
+                .filteredOn(p -> p.type() == Product.HOST_PASS)
+                .singleElement()
+                .satisfies(p -> assertThat(p.gamesLeftThisMonth())
+                        .as("no Host Pass game used")
+                        .isEqualTo(15));
     }
 
     @Test

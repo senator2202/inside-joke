@@ -171,18 +171,18 @@ class PaddleWebhookIT extends AbstractIntegrationTest {
 
         deliver(completed("evt_b2", "txn_b2", "pri_party", host));
         deliver(completed("evt_b3", "txn_b3", "pri_party", host));
-        List<Instant[]> parties = partyPasses(host);
+        List<Instant[]> parties = passes(host, Product.PARTY_PASS);
         assertThat(parties).hasSize(2);
         assertThat(parties.get(1)[0])
                 .as("the second Party Pass starts when the first ends")
                 .isEqualTo(parties.get(0)[1]);
     }
 
-    /** The Party Passes of a host that are not revoked, in the order they run: start and end of each. */
-    private List<Instant[]> partyPasses(UUID host) {
-        return jdbc.sql("SELECT starts_at, ends_at FROM entitlement WHERE user_id = ? AND type = 'PARTY_PASS' "
+    /** Start and end of the host's passes of this kind that are not revoked, in the order they run. */
+    private List<Instant[]> passes(UUID host, Product type) {
+        return jdbc.sql("SELECT starts_at, ends_at FROM entitlement WHERE user_id = ? AND type = ? "
                         + "AND revoked_at IS NULL ORDER BY starts_at")
-                .param(host)
+                .params(host, type.name())
                 .query((rs, n) -> new Instant[] {
                     rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant()
                 })
@@ -196,7 +196,7 @@ class PaddleWebhookIT extends AbstractIntegrationTest {
         deliver(completed("evt_q2", "txn_q2", "pri_party", host));
         deliver(completed("evt_q3", "txn_q3", "pri_party", host));
 
-        List<Instant[]> passes = partyPasses(host);
+        List<Instant[]> passes = passes(host, Product.PARTY_PASS);
         assertThat(passes).hasSize(3);
         assertThat(passes.get(1)[0]).as("the second starts when the first ends").isEqualTo(passes.get(0)[1]);
         assertThat(passes.get(2)[0])
@@ -207,9 +207,48 @@ class PaddleWebhookIT extends AbstractIntegrationTest {
                 .params(Timestamp.from(clock.instant()), host, Timestamp.from(passes.get(2)[0]))
                 .update();
         deliver(completed("evt_q4", "txn_q4", "pri_party", host));
-        assertThat(partyPasses(host).getLast()[0])
+        assertThat(passes(host, Product.PARTY_PASS).getLast()[0])
                 .as("a revoked pass keeps no place in the queue")
                 .isEqualTo(passes.get(1)[1]);
+    }
+
+    @Test
+    void aBoughtPartyPassPausesTheHostPassesForItsLength() {
+        UUID host = newHost();
+        Duration day = Product.PARTY_PASS.validity();
+        deliver(completed("evt_hp1", "txn_hp1", "pri_host", host));
+        deliver(completed("evt_hp2", "txn_hp2", "pri_host", host));
+        List<Instant[]> before = passes(host, Product.HOST_PASS);
+        assertThat(before).hasSize(2);
+
+        deliver(completed("evt_hp3", "txn_hp3", "pri_party", host));
+        deliver(completed("evt_hp4", "txn_hp4", "pri_party", host));
+
+        List<Instant[]> after = passes(host, Product.HOST_PASS);
+        assertThat(after.get(0)[0]).as("the running Host Pass keeps its start").isEqualTo(before.get(0)[0]);
+        assertThat(after.get(0)[1])
+                .as("and ends a day later for each Party Pass")
+                .isEqualTo(before.get(0)[1].plus(day.multipliedBy(2)));
+        assertThat(after.get(1)[0])
+                .as("the Host Pass bought ahead still starts when the first ends")
+                .isEqualTo(after.get(0)[1]);
+        assertThat(after.get(1)[1]).isEqualTo(before.get(1)[1].plus(day.multipliedBy(2)));
+        assertThat(passes(host, Product.PARTY_PASS)).hasSize(2);
+    }
+
+    @Test
+    void aPartyPassLeavesAHostPassThatEndsBeforeItStartsAlone() {
+        UUID host = newHost();
+        Instant now = clock.instant();
+        EntitlementEntity ending = data.pass(
+                host, Product.HOST_PASS, now.minus(Duration.ofDays(365)).plus(Duration.ofHours(1)));
+        data.pass(host, Product.PARTY_PASS, now);
+
+        deliver(completed("evt_hp5", "txn_hp5", "pri_party", host));
+
+        assertThat(passes(host, Product.HOST_PASS).getFirst()[1])
+                .as("the Host Pass ends before the queued Party Pass starts")
+                .isEqualTo(ending.endsAt());
     }
 
     @Test

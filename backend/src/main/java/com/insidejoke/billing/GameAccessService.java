@@ -148,11 +148,13 @@ public class GameAccessService implements GameAccessPort {
                 : null;
         boolean freeAvailable = s.freeGamesEnabled() && !freeUsed;
 
+        // A running Party Pass pays first: its games are unlimited, so the Host Pass's monthly games are kept for other
+        // days (and a bought Party Pass extends the Host Pass by its length, see PaymentService).
         Decision decision;
-        if (hostPassWithGames != null) {
-            decision = new Paid(hostPassWithGames);
-        } else if (partyPass != null) {
+        if (partyPass != null) {
             decision = new Paid(partyPass);
+        } else if (hostPassWithGames != null) {
+            decision = new Paid(hostPassWithGames);
         } else if (freeAvailable && !aiSpend.freeBudgetExhausted()) {
             decision = new Free();
         } else if (monthlyExhausted) {

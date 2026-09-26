@@ -123,6 +123,18 @@ public class PaymentService {
         Instant start = entitlements.findLastEnd(userId, product, now).orElse(now);
         EntitlementEntity pass =
                 entitlements.insert(userId, recorded.get().id(), product, start, start.plus(product.validity()), now);
+        if (product == Product.PARTY_PASS) {
+            // Games during a Party Pass don't use the Host Pass, so the Host Pass doesn't lose that time either.
+            int paused = entitlements.pauseHostPasses(userId, start, product.validity());
+            if (paused > 0) {
+                log.info(
+                        "Extended {} Host Pass(es) of {} by {} for purchase {}",
+                        paused,
+                        userId,
+                        product.validity(),
+                        txnId);
+            }
+        }
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("product", product.name());
         props.put("amount_minor", amount);

@@ -3,6 +3,7 @@ package com.insidejoke.billing;
 import com.insidejoke.common.DbUtils;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -90,6 +91,25 @@ public class EntitlementRepository {
                 .params(userId, type.name(), DbUtils.ts(now))
                 .query((rs, n) -> DbUtils.instant(rs, "ends_at"))
                 .optional();
+    }
+
+    /**
+     * Pauses the host's Host Passes for {@code length} from {@code from}: a pass running at that moment ends that much
+     * later, and one that starts after it (bought ahead) starts and ends that much later. Passes that end by then are
+     * left alone. Returns how many passes moved.
+     */
+    public int pauseHostPasses(UUID userId, Instant from, Duration length) {
+        return jdbc.sql("UPDATE entitlement SET "
+                        + "starts_at = CASE WHEN starts_at >= ? THEN starts_at + make_interval(secs => ?) "
+                        + "ELSE starts_at END, ends_at = ends_at + make_interval(secs => ?) "
+                        + "WHERE user_id = ? AND type = ? AND revoked_at IS NULL AND ends_at > ?")
+                .param(DbUtils.ts(from))
+                .param(length.toSeconds())
+                .param(length.toSeconds())
+                .param(userId)
+                .param(Product.HOST_PASS.name())
+                .param(DbUtils.ts(from))
+                .update();
     }
 
     public Optional<EntitlementEntity> findByPurchase(UUID purchaseId) {
