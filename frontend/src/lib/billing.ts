@@ -6,6 +6,7 @@ export type ProductId = "PARTY_PASS" | "HOST_PASS";
 export interface Pass {
   id: string;
   type: ProductId;
+  startsAt: string;
   endsAt: string;
   monthlyGameLimit: number | null;
   gamesLeftThisMonth: number | null;
@@ -17,7 +18,10 @@ export interface AccessStatus {
     freeGamesEnabled: boolean;
     freeGameAvailable: boolean;
     nextFreeGameAt: string | null;
+    /** Passes running now: these give access. */
     passes: Pass[];
+    /** Passes bought ahead, soonest first: each starts when the previous one of its kind ends. */
+    upcomingPasses: Pass[];
     nextGame: "FREE" | ProductId | "PAYWALL";
     paywallReason: string | null;
   };
@@ -52,7 +56,7 @@ export function fetchCheckout(signal?: AbortSignal): Promise<CheckoutConfig> {
   return api<CheckoutConfig>("/api/billing/checkout", { signal });
 }
 
-/** "today, 21:40", "tomorrow, 21:40" or "23 Sep 2027" (in the interface language). */
+/** "today, 21:40", "tomorrow, 21:40" or "23 Sep 2027" (in the interface language); for a pass's start as well as its end. */
 export function formatPassEnd(iso: string, now: Date = new Date(), lang: Lang = "en"): string {
   const locale = lang === "ru" ? "ru-RU" : "en-GB";
   const end = new Date(iso);

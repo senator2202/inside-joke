@@ -6,7 +6,9 @@ import { renderRoute } from "../../test/render";
 import { AccountPage, freeGameLine } from "./AccountPage";
 
 const me = { id: "u1", email: "ana@example.com", displayName: "Ana", role: "HOST", googleLinked: true };
+const earlier = new Date(Date.now() - 165 * 24 * 3600_000).toISOString();
 const later = new Date(Date.now() + 200 * 24 * 3600_000).toISOString();
+const muchLater = new Date(Date.now() + 565 * 24 * 3600_000).toISOString();
 
 function access(overrides: Partial<AccessStatus["access"]> = {}): AccessStatus {
   return {
@@ -15,6 +17,7 @@ function access(overrides: Partial<AccessStatus["access"]> = {}): AccessStatus {
       freeGameAvailable: true,
       nextFreeGameAt: null,
       passes: [],
+      upcomingPasses: [],
       nextGame: "FREE",
       paywallReason: null,
       ...overrides,
@@ -39,7 +42,17 @@ describe("AccountPage", () => {
           freeGameAvailable: false,
           nextFreeGameAt: new Date(Date.now() + 2.5 * 86_400_000).toISOString(),
           nextGame: "HOST_PASS",
-          passes: [{ id: "e1", type: "HOST_PASS", endsAt: later, monthlyGameLimit: 15, gamesLeftThisMonth: 12, grantedByAdmin: true }],
+          passes: [
+            {
+              id: "e1",
+              type: "HOST_PASS",
+              startsAt: earlier,
+              endsAt: later,
+              monthlyGameLimit: 15,
+              gamesLeftThisMonth: 12,
+              grantedByAdmin: true,
+            },
+          ],
         }),
       },
     });
@@ -52,6 +65,29 @@ describe("AccountPage", () => {
     expect(screen.getByText("Next free game in 3 days.")).toBeInTheDocument();
     expect(screen.getByText("Receipts come by email from Paddle.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Create a party" })).toHaveAttribute("href", "/new");
+  });
+
+  it("lists a pass bought ahead after the running ones, with its start", async () => {
+    mockFetch({
+      "GET /api/me": { status: 200, body: me },
+      "GET /api/billing/passes": {
+        status: 200,
+        body: access({
+          nextGame: "HOST_PASS",
+          passes: [{ id: "e1", type: "HOST_PASS", startsAt: earlier, endsAt: later, monthlyGameLimit: 15, gamesLeftThisMonth: 3 }],
+          upcomingPasses: [
+            { id: "e2", type: "HOST_PASS", startsAt: later, endsAt: muchLater, monthlyGameLimit: 15, gamesLeftThisMonth: 15 },
+          ],
+        }),
+      },
+    });
+    renderRoute("/account", "/account", <AccountPage />);
+    expect(await screen.findAllByText("Host Pass")).toHaveLength(2);
+    const [running, ahead] = screen.getAllByRole("listitem");
+    expect(running).toHaveTextContent(/Active until .* · 3 of 15 games left this month/);
+    expect(ahead).toHaveTextContent("next");
+    expect(ahead).toHaveTextContent(/Starts .*, until .* · 15 games a month/);
+    expect(screen.queryByText(/No passes yet/)).not.toBeInTheDocument();
   });
 
   it("has an empty state and a retry when loading fails", async () => {

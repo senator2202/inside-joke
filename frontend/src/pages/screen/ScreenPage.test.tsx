@@ -184,6 +184,7 @@ describe("ScreenPage", () => {
             freeGameAvailable: false,
             nextFreeGameAt: null,
             passes: [],
+            upcomingPasses: [],
             nextGame: "PAYWALL",
             paywallReason: "PAYWALL_FREE_LIMIT",
           },

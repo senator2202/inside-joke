@@ -73,7 +73,7 @@ export function PassPicker({ reason, waitingPlayers, onDismiss, onActivated }: P
     let unsubscribe = () => undefined as unknown;
     (async () => {
       const [cfg, access] = await Promise.all([fetchCheckout(ctl.signal), fetchAccess(ctl.signal)]);
-      knownPasses.current = new Set(access.access.passes.map((p) => p.id));
+      knownPasses.current = new Set([...access.access.passes, ...access.access.upcomingPasses].map((p) => p.id));
       setConfig(cfg);
       if (!cfg.available || !cfg.clientToken) {
         setStep({ kind: "unavailable" });
@@ -118,7 +118,10 @@ export function PassPicker({ reason, waitingPlayers, onDismiss, onActivated }: P
     const poll = async () => {
       try {
         const access = await fetchAccess();
-        const fresh = access.access.passes.find((p) => p.type === activating && !knownPasses.current.has(p.id));
+        // A pass bought while another of its kind runs waits its turn: it is confirmed all the same.
+        const fresh = [...access.access.passes, ...access.access.upcomingPasses].find(
+          (p) => p.type === activating && !knownPasses.current.has(p.id),
+        );
         if (fresh && !stopped) {
           setStep({ kind: "active", pass: fresh });
           return;
@@ -264,15 +267,21 @@ export function PassPicker({ reason, waitingPlayers, onDismiss, onActivated }: P
 function Activation({ step, party, support }: { step: Extract<Step, { kind: "activating" | "active" }>; party: boolean; support: string }) {
   const { t, lang } = useI18n();
   if (step.kind === "active") {
+    const product = PRODUCT_NAMES[step.pass.type];
+    const now = new Date();
+    const waits = new Date(step.pass.startsAt) > now;
     return (
       <div className={styles.center} role="status">
         <p className={styles.done} aria-hidden="true">
           🎉
         </p>
         <h2 id="pass-title" className={styles.title}>
-          {t("pass.done", { product: PRODUCT_NAMES[step.pass.type], until: formatPassEnd(step.pass.endsAt, new Date(), lang) })}
+          {waits
+            ? t("pass.doneAhead", { product, from: formatPassEnd(step.pass.startsAt, now, lang) })
+            : t("pass.done", { product, until: formatPassEnd(step.pass.endsAt, now, lang) })}
         </h2>
-        {party && <p className={styles.subtitle}>{t("pass.startsSoon")}</p>}
+        {waits && <p className={styles.subtitle}>{t("pass.aheadNote")}</p>}
+        {party && !waits && <p className={styles.subtitle}>{t("pass.startsSoon")}</p>}
       </div>
     );
   }

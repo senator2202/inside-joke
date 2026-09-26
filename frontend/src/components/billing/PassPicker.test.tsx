@@ -18,13 +18,14 @@ const config: CheckoutConfig = {
   supportEmail: "help@insidejoke.app",
 };
 
-function access(passes: Pass[]): AccessStatus {
+function access(passes: Pass[], upcomingPasses: Pass[] = []): AccessStatus {
   return {
     access: {
       freeGamesEnabled: true,
       freeGameAvailable: false,
       nextFreeGameAt: null,
       passes,
+      upcomingPasses,
       nextGame: passes.length ? passes[0]!.type : "PAYWALL",
       paywallReason: passes.length ? null : "PAYWALL_FREE_LIMIT",
     },
@@ -35,6 +36,7 @@ function access(passes: Pass[]): AccessStatus {
 const newPass: Pass = {
   id: "e-new",
   type: "PARTY_PASS",
+  startsAt: new Date().toISOString(),
   endsAt: new Date(Date.now() + 24 * 3600_000).toISOString(),
   monthlyGameLimit: null,
   gamesLeftThisMonth: null,
@@ -118,6 +120,37 @@ describe("PassPicker", () => {
     expect(onActivated).not.toHaveBeenCalled();
     await act(() => vi.advanceTimersByTimeAsync(3_000));
     expect(onActivated).toHaveBeenCalledWith(newPass);
+  });
+
+  it("confirms a pass bought ahead and says when it starts", async () => {
+    const running: Pass = { ...newPass, id: "e-running" };
+    const queued: Pass = {
+      ...running,
+      id: "e-queued",
+      startsAt: running.endsAt,
+      endsAt: new Date(Date.now() + 48 * 3600_000).toISOString(),
+    };
+    const earlierQueued: Pass = { ...queued, id: "e-old-queued", type: "HOST_PASS" };
+    mockFetch({
+      "GET /api/billing/checkout": { status: 200, body: config },
+      "GET /api/billing/passes": [
+        { status: 200, body: access([running], [earlierQueued]) },
+        { status: 200, body: access([running], [earlierQueued]) },
+        { status: 200, body: access([running], [earlierQueued, queued]) },
+      ],
+    });
+    const paddle = fakePaddle();
+    const onActivated = vi.fn();
+    render(<PassPicker onDismiss={() => undefined} onActivated={onActivated} />);
+    fireEvent.click(await screen.findByLabelText("I’m 18 or older"));
+    fireEvent.click(screen.getByRole("button", { name: "Get Party Pass" }));
+    paddle.emit("checkout.completed");
+    await act(() => vi.advanceTimersByTimeAsync(4_100));
+    expect(await screen.findByRole("heading", { name: /^Done! Party Pass starts tomorrow, \d\d:\d\d$/ })).toBeInTheDocument();
+    expect(screen.getByText(/right after your current one of the same kind/)).toBeInTheDocument();
+    expect(screen.queryByText(/payment is taking longer/)).not.toBeInTheDocument();
+    await act(() => vi.advanceTimersByTimeAsync(1_500));
+    expect(onActivated).toHaveBeenCalledWith(queued);
   });
 
   it("says so when the confirmation is slow and keeps waiting", async () => {

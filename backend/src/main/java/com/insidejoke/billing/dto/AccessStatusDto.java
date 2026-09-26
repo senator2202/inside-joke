@@ -10,5 +10,7 @@ public record AccessStatusDto(
         boolean freeGameAvailable,
         Instant nextFreeGameAt,
         List<PassStatusDto> passes,
+        // Passes bought ahead, soonest first: they don't give access yet.
+        List<PassStatusDto> upcomingPasses,
         String nextGame,
         ErrorCode paywallReason) {}

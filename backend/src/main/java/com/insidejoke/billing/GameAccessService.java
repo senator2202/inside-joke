@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,8 +95,12 @@ public class GameAccessService implements GameAccessPort {
             case Denied(ErrorCode ignored) -> "PAYWALL";
         };
         ErrorCode reason = e.decision() instanceof Denied(ErrorCode refusal) ? refusal : null;
+        // No game has been played on a pass that hasn't started: its whole monthly limit is left.
+        List<PassStatusDto> upcoming = entitlements.findUpcoming(hostUserId, now).stream()
+                .map(u -> view(u, u.monthlyGameLimit()))
+                .toList();
         return new AccessStatusDto(
-                e.freeGamesEnabled(), e.freeGameAvailable(), e.nextFreeGameAt(), e.passes(), next, reason);
+                e.freeGamesEnabled(), e.freeGameAvailable(), e.nextFreeGameAt(), e.passes(), upcoming, next, reason);
     }
 
     private record Evaluation(
@@ -119,7 +124,7 @@ public class GameAccessService implements GameAccessPort {
             if (e.monthlyGameLimit() != null) {
                 left = Math.max(0, e.monthlyGameLimit() - games.countForEntitlementSince(e.id(), monthStart));
             }
-            passes.add(new PassStatusDto(e.id(), e.type(), e.endsAt(), e.monthlyGameLimit(), left, e.grantedByAdmin()));
+            passes.add(view(e, left));
             if (e.type() == Product.HOST_PASS) {
                 if (left == null || left > 0) {
                     if (hostPassWithGames == null) {
@@ -158,6 +163,17 @@ public class GameAccessService implements GameAccessPort {
             decision = new Denied(ErrorCode.BUDGET_PAUSED);
         }
         return new Evaluation(decision, s.freeGamesEnabled(), freeAvailable, nextFree, List.copyOf(passes));
+    }
+
+    private static PassStatusDto view(EntitlementEntity e, @Nullable Integer gamesLeftThisMonth) {
+        return new PassStatusDto(
+                e.id(),
+                e.type(),
+                e.startsAt(),
+                e.endsAt(),
+                e.monthlyGameLimit(),
+                gamesLeftThisMonth,
+                e.grantedByAdmin());
     }
 
     private static GameSessionRepository.Start sessionRow(

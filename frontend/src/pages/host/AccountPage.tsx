@@ -17,12 +17,17 @@ export function freeGameLine(access: AccessStatus["access"], now: Date = new Dat
   return i18n.tp("account.nextFree", days);
 }
 
-function passDetail(p: Pass, { t, lang }: I18n): string {
-  const until = t("account.activeUntil", { until: formatPassEnd(p.endsAt, new Date(), lang) });
+/** A running pass: until when and how many games. A pass bought ahead: when it starts and until when. */
+function passDetail(p: Pass, { t, lang }: I18n, ahead = false): string {
+  const now = new Date();
+  const until = formatPassEnd(p.endsAt, now, lang);
+  const when = ahead ? t("account.startsOn", { from: formatPassEnd(p.startsAt, now, lang), until }) : t("account.activeUntil", { until });
   if (p.type === "HOST_PASS" && p.monthlyGameLimit !== null) {
-    return `${until} · ${t("account.gamesLeft", { left: p.gamesLeftThisMonth ?? 0, limit: p.monthlyGameLimit })}`;
+    return ahead
+      ? `${when} · ${t("account.gamesPerMonth", { limit: p.monthlyGameLimit })}`
+      : `${when} · ${t("account.gamesLeft", { left: p.gamesLeftThisMonth ?? 0, limit: p.monthlyGameLimit })}`;
   }
-  return `${until} · ${t("account.unlimited")}`;
+  return `${when} · ${t("account.unlimited")}`;
 }
 
 /** H6: access status and account management. */
@@ -114,7 +119,7 @@ export function AccountPage() {
             </>
           ) : (
             <>
-              {status.access.passes.length === 0 ? (
+              {status.access.passes.length === 0 && status.access.upcomingPasses.length === 0 ? (
                 <p>{t("account.noPasses")}</p>
               ) : (
                 <ul className={styles.passes}>
@@ -123,6 +128,14 @@ export function AccountPage() {
                       <strong>{PRODUCT_NAMES[p.type]}</strong>
                       {p.grantedByAdmin && <span className={styles.gift}>{t("account.gift")}</span>}
                       <span>{passDetail(p, i18n)}</span>
+                    </li>
+                  ))}
+                  {status.access.upcomingPasses.map((p) => (
+                    <li key={p.id} data-upcoming="true">
+                      <strong>{PRODUCT_NAMES[p.type]}</strong>
+                      <span className={styles.gift}>{t("account.upcoming")}</span>
+                      {p.grantedByAdmin && <span className={styles.gift}>{t("account.gift")}</span>}
+                      <span>{passDetail(p, i18n, true)}</span>
                     </li>
                   ))}
                 </ul>

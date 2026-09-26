@@ -11,6 +11,7 @@ export interface AccessStatusDto {
   freeGameAvailable: boolean;
   nextFreeGameAt: string;
   passes: PassStatusDto[];
+  upcomingPasses: PassStatusDto[];
   nextGame: string;
   paywallReason: ErrorCode;
 }
@@ -387,6 +388,7 @@ export type PassSource = "PURCHASE" | "GRANT";
 export interface PassStatusDto {
   id: string;
   type: Product;
+  startsAt: string;
   endsAt: string;
   monthlyGameLimit: number;
   gamesLeftThisMonth: number;

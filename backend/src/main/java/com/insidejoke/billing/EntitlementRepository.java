@@ -71,6 +71,15 @@ public class EntitlementRepository {
                 .list();
     }
 
+    /** Passes bought ahead that haven't started at {@code now} and aren't revoked, the one starting first first. */
+    public List<EntitlementEntity> findUpcoming(UUID userId, Instant now) {
+        return jdbc.sql("SELECT " + COLUMNS + " FROM entitlement WHERE user_id = ? AND revoked_at IS NULL "
+                        + "AND starts_at > ? ORDER BY starts_at, id")
+                .params(userId, DbUtils.ts(now))
+                .query(ROW_MAPPER)
+                .list();
+    }
+
     /**
      * When the not-revoked pass of this kind that runs longest ends, if it runs past {@code now}. Counts passes that
      * haven't started yet: a pass bought while another waits its turn goes after that one.

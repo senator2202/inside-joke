@@ -8,7 +8,15 @@ import { NewPartyPage, accessLine, type AccessStatus } from "./NewPartyPage";
 
 const me = { id: "u1", email: "ana@example.com", displayName: "Ana", role: "HOST", googleLinked: true };
 const free: AccessStatus = {
-  access: { freeGamesEnabled: true, freeGameAvailable: true, nextFreeGameAt: null, passes: [], nextGame: "FREE", paywallReason: null },
+  access: {
+    freeGamesEnabled: true,
+    freeGameAvailable: true,
+    nextFreeGameAt: null,
+    passes: [],
+    upcomingPasses: [],
+    nextGame: "FREE",
+    paywallReason: null,
+  },
   drainMode: false,
 };
 
@@ -78,6 +86,7 @@ describe("NewPartyPage", () => {
     const pass = (type: "PARTY_PASS" | "HOST_PASS", left: number | null) => ({
       id: "e",
       type,
+      startsAt: "2026-09-22T20:00:00Z",
       endsAt: "2026-09-23T20:00:00Z",
       monthlyGameLimit: left === null ? null : 15,
       gamesLeftThisMonth: left,

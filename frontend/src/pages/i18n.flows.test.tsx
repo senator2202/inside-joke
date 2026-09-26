@@ -47,6 +47,7 @@ describe("language flows", () => {
             freeGameAvailable: true,
             nextFreeGameAt: null,
             passes: [],
+            upcomingPasses: [],
             nextGame: "FREE",
             paywallReason: null,
           },
